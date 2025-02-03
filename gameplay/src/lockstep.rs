@@ -5,8 +5,11 @@ pub trait LockstepData {
     /// 每帧的输入数据
     type InputData: Clone + Send + Sync + 'static;
 
-    /// 持久化的切片数据（例如用于回放或断线重连）
+    /// 逻辑数据的持久化部分，在一些关键点重置非持久化数据
     type PersistentData: Clone + Send + Sync + 'static;
+
+    /// 逻辑帧数据, 是持久化数据的超集
+    type LogicData: Clone + Send + Sync + 'static;
 
     /// 渲染数据
     type RenderData: Clone + Send + Sync + 'static;
