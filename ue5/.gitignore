@@ -1,0 +1,13 @@
+
+.idea/
+.vs/
+ArchivedBuilds/
+Build/
+Binaries/
+Intermediate/
+DerivedDataCache/
+Package/
+Saved/
+
+.vsconfig
+*.sln
