@@ -1,0 +1,21 @@
+[tasks.build_win64]
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.copy_dll]
+command = "cp"
+args = ["target/release/o_brother.dll", "D:/UGit/o_bro_ue5/Plugins/oz_lib/ThirdParty/Win64/gameplay.dll"]
+
+[tasks.build_ue5]
+dependencies = ["build_win64", "copy_dll"]
+
+[tasks.build_wasm]
+command = "cargo"
+args = ["build", "--target", "wasm32-unknown-unknown", "--release"]
+
+[tasks.copy_wasm]
+command = "cp"
+args = ["target/wasm32-unknown-unknown/release/wasm_test.wasm", "D:/UGit/minigame/test_wasm/wasm/wasm_test.wasm"]
+
+[tasks.build_cocos]
+dependencies = ["build_wasm", "copy_wasm"]
