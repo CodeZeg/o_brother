@@ -1,12 +1,12 @@
 #![no_std]
 #![allow(unused)]
-// #![allow(improper_ctypes)]  // 忽略外部函数的类型检查
+#![allow(improper_ctypes)]  // 忽略外部函数的类型检查
 extern crate alloc;
-extern crate wee_alloc;
 mod allocator;
 mod engine;
 mod lockstep;
 
+use alloc::vec;
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use hecs::*;
@@ -58,6 +58,9 @@ use hecs::*;
 #[no_mangle]
 pub extern "C" fn start() {
     engine::log("begin start");
+    let mut map = vec![];
+    map.push(1);
+
     let mut world = World::new();
     // Nearly any type can be used as a component with zero boilerplate
     let a = world.spawn((123, true, "abc"));

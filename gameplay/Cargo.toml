@@ -1,5 +1,5 @@
 [package]
-name = "o_brother"
+name = "gameplay"
 version = "0.1.0"
 edition = "2021"
 
@@ -21,4 +21,3 @@ panic = 'abort'
 lto = true
 opt-level = 'z'
 codegen-units = 1
-
