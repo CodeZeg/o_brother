@@ -30,6 +30,7 @@ public class oz_lib : ModuleRules
 				"Projects",
 				"Engine",
 				"CoreUObject",
+				"EnhancedInput",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

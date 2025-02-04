@@ -56,6 +56,7 @@ void GPWrapper::LoadDLL()
 	Init_Engine(gp_dll_handle);
 	gp_q_add = static_cast<int(*)(int, int)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("q_add")));
 	gp_start = static_cast<void(*)()>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("start")));
+	gp_update = static_cast<void(*)(InputData)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("update")));
 }
 
 void GPWrapper::UnLoadDLL()
@@ -69,6 +70,7 @@ void GPWrapper::UnLoadDLL()
 	gp_dll_handle = nullptr;
 	gp_q_add = nullptr;
 	gp_start = nullptr;
+	gp_update = nullptr;
 }
 
 void GPWrapper::Start()
@@ -81,4 +83,19 @@ void GPWrapper::Start()
 
 void GPWrapper::Update(float DeltaTime)
 {
+    // 创建 InputData 实例
+    InputData inputData;
+
+    // 设置 player_0 的 state 为 Fighting，并指定 direction 和 magnitude
+    inputData.player_0.state.tag = InputStateData_Fighting;
+    inputData.player_0.state.data.fighting.direction = 0.5f; // 设置 direction 为 0.5
+    inputData.player_0.state.data.fighting.magnitude = DeltaTime; // 可以根据需要设置 magnitude
+
+    // 设置 player_0 的 action
+    inputData.player_0.action.tag = InputActionData_ChoseCard;
+    inputData.player_0.action.data.choseCard = 1; // 根据需要设置 choseCard 的值
+	
+	gp_update(inputData);
 }
+
+
