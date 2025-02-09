@@ -34,6 +34,9 @@
 //
 //     // 默认蓝图路径
 //     BlueprintPath = TEXT("/Game/Mixamo/Michelle/BP_Michelle");
+//
+//     IMC_Local_PLayer = TSoftObjectPtr<UInputMappingContext>(FSoftObjectPath("/Game/Input/IMC_Player.IMC_Player"));
+//     IA_Move = TSoftObjectPtr<UInputAction>(FSoftObjectPath("/Game/Input/IA_Move.IA_Move"));
 // }
 //
 // // Called when the game starts or when spawned
@@ -49,7 +52,7 @@
 //             if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 //             {
 //                 // 添加映射上下文
-//                 Subsystem->AddMappingContext(IMC_Local_PLayer, 0);
+//                 Subsystem->AddMappingContext(IMC_Local_PLayer.Get(), 0);
 //             }
 //         }
 //     }
@@ -236,7 +239,7 @@
 //     if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 //     {
 //         // 绑定动作
-//         EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ARandomMover::OnInputMoveAxis2D);
+//         EnhancedInputComponent->BindAction(IA_Move.Get(), ETriggerEvent::Triggered, this, &ARandomMover::OnInputMoveAxis2D);
 //     }
 // }
 //

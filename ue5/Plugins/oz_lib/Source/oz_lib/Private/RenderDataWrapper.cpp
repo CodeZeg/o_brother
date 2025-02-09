@@ -1,0 +1,5 @@
+#include "RenderDataWrapper.h"
+#include "HAL/PlatformProcess.h"
+#include "Misc/Paths.h"
+#include "Serialization/MemoryReader.h"
+#include "Serialization/MemoryWriter.h"

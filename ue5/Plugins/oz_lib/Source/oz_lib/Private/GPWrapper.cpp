@@ -2,30 +2,32 @@
 
 
 #include "GPWrapper.h"
+#include "RenderDataWrapper.h"
 
 #include "Interfaces/IPluginManager.h"
 
 DEFINE_LOG_CATEGORY(LogGP);
 
-static void log_wrapper(const uint8* msg, uint32 len)
+static void log_wrapper(const char* msg, uint32 len)
 {
 	// 将消息转换为字符串并使用 Unreal 的日志系统
-	auto logMessage = UTF8_TO_TCHAR(reinterpret_cast<const UTF8CHAR*>(msg));
-	UE_LOG(LogGP, Display, TEXT("%s"), logMessage);
+	auto logMessage = FString(msg);
+	UE_LOG(LogGP, Display, TEXT("%d, %s"), len, *logMessage);
 }
 
-static void error_wrapper(const uint8* msg, uint32 len)
+static void error_wrapper(const char* msg, uint32 len)
 {
 	// 将消息转换为字符串并使用 Unreal 的日志系统
-	auto logMessage = UTF8_TO_TCHAR(reinterpret_cast<const UTF8CHAR*>(msg));
-	UE_LOG(LogGP, Error, TEXT("%s"), logMessage);
+	// auto logMessage = UTF8_TO_TCHAR(reinterpret_cast<const UTF8CHAR*>(msg));
+	auto logMessage = FString(msg);
+	UE_LOG(LogGP, Error, TEXT("%d, %s"), len, *logMessage);
 }
 
 static void Init_Engine(void* gp_dll_handle)
 {
 	struct EngineFunctions {
-		void (*log)(const uint8_t* msg, uint32_t len);
-		void (*error)(const uint8_t* msg, uint32_t len);
+		void (*log)(const char* msg, uint32_t len);
+		void (*error)(const char* msg, uint32_t len);
 	};
 	typedef void (*InitEngineFunc)(EngineFunctions);
 	InitEngineFunc init_logger = (InitEngineFunc)FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("init_engine"));
@@ -56,7 +58,7 @@ void GPWrapper::LoadDLL()
 	Init_Engine(gp_dll_handle);
 	gp_q_add = static_cast<int(*)(int, int)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("q_add")));
 	gp_start = static_cast<void(*)()>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("start")));
-	gp_update = static_cast<void(*)(InputData)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("update")));
+	gp_update = static_cast<FGPRenderData(*)(InputData)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("update")));
 }
 
 void GPWrapper::UnLoadDLL()
@@ -81,21 +83,9 @@ void GPWrapper::Start()
 	UE_LOG(LogGP, Display, TEXT("gp_start: %d"), temp);
 }
 
-void GPWrapper::Update(float DeltaTime)
+FGPRenderData GPWrapper::Update(const InputData &inputData)
 {
-    // 创建 InputData 实例
-    InputData inputData;
-
-    // 设置 player_0 的 state 为 Fighting，并指定 direction 和 magnitude
-    inputData.player_0.state.tag = InputStateData_Fighting;
-    inputData.player_0.state.data.fighting.direction = 0.5f; // 设置 direction 为 0.5
-    inputData.player_0.state.data.fighting.magnitude = DeltaTime; // 可以根据需要设置 magnitude
-
-    // 设置 player_0 的 action
-    inputData.player_0.action.tag = InputActionData_ChoseCard;
-    inputData.player_0.action.data.choseCard = 1; // 根据需要设置 choseCard 的值
-	
-	gp_update(inputData);
+    return gp_update(inputData);
 }
 
 

@@ -27,9 +27,9 @@
 //
 // private:
 // 	UPROPERTY(EditAnywhere, Category = "RandomMover", meta = (AllowPrivateAccess = "true"))
-// 	UInputMappingContext* IMC_Local_PLayer;
+// 	TSoftObjectPtr<UInputMappingContext> IMC_Local_PLayer;
 // 	UPROPERTY(EditAnywhere, Category = "RandomMover", meta = (AllowPrivateAccess = "true"))
-// 	UInputAction* IA_Move;
+// 	TSoftObjectPtr<UInputAction> IA_Move;
 // 	UPROPERTY(EditAnywhere, Category = "RandomMover", meta = (AllowPrivateAccess = "true"))
 // 	FVector2D Move_Axis2D;
 // 	
