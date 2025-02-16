@@ -7,13 +7,16 @@ mod engine;
 mod lockstep;
 mod data;
 mod physics;
+mod schema;
 
 use data::*;
 
 use alloc::{format, vec};
 use alloc::ffi::CString;
 use alloc::string::ToString;
+use alloc::vec::Vec;
 use core::ops::Sub;
+use flatbuffers::{FlatBufferBuilder, WIPOffset};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use hecs::*;
@@ -22,6 +25,9 @@ use crate::data::logic_data::{LogicCharacterData, LogicData, MoveController};
 use crate::data::protocol::{MotionState, Vector2D, Transform2D, fix_yaw};
 use crate::data::render_data::{RenderCharacterData, RenderData};
 use crate::physics::damper::Damper;
+use crate::schema::{math_generated::*, render_data_generated::* };
+use crate::schema::math_generated::gameplay::{GPTrans2D, GPVec2D};
+use crate::schema::render_data_generated::gameplay::{GPMotionState, GPRenderCharacterData, GPRenderCharacterDataArgs, GPRenderData, GPRenderDataArgs};
 
 const DELTA_TIME: f32 = 1.0 / 30.0;
 static mut WORLD: Option<LogicData> = None;
@@ -42,6 +48,7 @@ pub extern "C" fn start() {
                 ..Default::default()
             },
         },
+        monsters: vec![],
     };
 
     unsafe { WORLD = Some(world); }
@@ -110,6 +117,7 @@ fn get_render_world(data: &LogicData) -> RenderData {
     let render_data = RenderData {
         generation: 0,
         character0: character,
+        monsters: Default::default(),
     };
     render_data
 }
@@ -119,32 +127,52 @@ pub extern "C" fn update(input: InputData) -> RenderData {
     let mut world = world();
     update_world(&mut world, &input);
     get_render_world(&world)
-
-    // let json = serde_json::to_string(&input).unwrap_or("failed to serialize input data".to_string());
-    // engine::log(&format!("input: {}", json));
+}
 
 
 
-    //
-    // let character = RenderCharacterData {
-    //     id: 1001,
-    //     transform: Transform2D {
-    //         pos: Vector2D { x: 0.0, y: 0.0 },
-    //         yaw: 0.0,
-    //     },
-    //     motion_state: MotionState {
-    //         locomotion_speed: 0.456,
-    //         montage_id: 001,
-    //         montage_progress: 0.123,
-    //     }
-    // };
-    //
-    // let render_data = RenderData {
-    //     generation: 0,
-    //     character0: character,
-    // };
-    //
-    // // let json = serde_json::to_string(&render_data).unwrap_or("failed to serialize render data".to_string());
-    // // engine::log(&format!("render: {}", json));
-    // render_data
+fn get_render_character_new(
+    data: &LogicCharacterData
+) -> (i32, GPTrans2D) {
+    let pos = GPVec2D::new(data.transform.pos.x, data.transform.pos.y);
+    let trans = GPTrans2D::new(&pos, 0.0);
+    (data.id, trans)
+}
+
+#[no_mangle]
+pub extern "C" fn get_render_world_new(data: &LogicData) -> *const u8 {
+    let mut builder = FlatBufferBuilder::new();
+    let (ch0_id, ch0_trans) = get_render_character_new(&data.character0);
+    let character0 = GPRenderCharacterData::create(&mut builder, &GPRenderCharacterDataArgs {
+        id: ch0_id,
+        transform: Some(&ch0_trans),
+        motion_state: None,
+    });
+
+    let mut monsters = Vec::new();
+    for monster_data in data.monsters.iter() {
+        let (monster_id, monster_trans) = get_render_character_new(&monster_data);
+        let monster = GPRenderCharacterData::create(&mut builder, &GPRenderCharacterDataArgs {
+            id: monster_id,
+            transform: Some(&monster_trans),
+            motion_state: None,
+        });
+        monsters.push(monster);
+    }
+    let monsters = builder.create_vector(&monsters);
+    let render_data = GPRenderData::create(
+        &mut builder,
+        &GPRenderDataArgs {
+            generation: 0,
+            character0: Some(character0),
+            monsters: Some(monsters),
+        }
+    );
+
+    builder.finish(render_data, None);
+
+    let buf = builder.finished_data();
+    let ptr = buf.as_ptr();
+
+    ptr
 }

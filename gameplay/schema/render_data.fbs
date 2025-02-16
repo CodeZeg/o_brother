@@ -1,0 +1,23 @@
+include "math.fbs";
+
+namespace gameplay;
+
+struct GPMotionState {
+  locomotion_speed:float;
+  montage_id:int;
+  montage_progress:float;
+}
+
+table GPRenderCharacterData {
+  id:int;
+  transform:GPTrans2D;
+  motion_state:GPMotionState;
+}
+
+table GPRenderData {
+  generation:int;
+  character0:GPRenderCharacterData;
+  monsters:[GPRenderCharacterData];
+}
+
+root_type GPRenderData;

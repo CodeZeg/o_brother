@@ -1,7 +1,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
-use crate::data::protocol::{MotionState, Transform2D};
+use crate::data::protocol::{ MotionState, Transform2D};
 
 #[repr(C)]
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -12,8 +12,9 @@ pub struct RenderCharacterData {
 }
 
 #[repr(C)]
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RenderData {
     pub generation: i32,
     pub character0: RenderCharacterData,
+    pub monsters: Vec<RenderCharacterData>,
 }

@@ -19,3 +19,8 @@ args = ["target/wasm32v1-none/release/gameplay.wasm", "../minigame/wasm/gameplay
 
 [tasks.minigame]
 dependencies = ["build_wasm", "copy_wasm"]
+
+
+[tasks.schema]
+command = "flatc"
+args = ["--rust", "-o", "./src/schema", "schema/math.fbs", "schema/render_data.fbs"]

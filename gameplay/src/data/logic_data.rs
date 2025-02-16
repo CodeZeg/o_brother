@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use crate::data::protocol::{MotionState, Transform2D, Vector2D};
 
@@ -21,4 +22,5 @@ pub struct LogicCharacterData {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct LogicData {
     pub character0: LogicCharacterData,
+    pub monsters: Vec<LogicCharacterData>,
 }
