@@ -6,71 +6,145 @@ mod allocator;
 mod engine;
 mod lockstep;
 mod data;
+mod physics;
 
 use data::*;
 
 use alloc::{format, vec};
 use alloc::ffi::CString;
 use alloc::string::ToString;
+use core::ops::Sub;
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use hecs::*;
-use crate::data::input_data::{InputData, InputStateData};
-use crate::data::protocol::{MotionState, Position, Rotation, Transform2D};
+use crate::data::input_data::{InputData, InputPlayerData, InputStateData};
+use crate::data::logic_data::{LogicCharacterData, LogicData, MoveController};
+use crate::data::protocol::{MotionState, Vector2D, Transform2D, fix_yaw};
 use crate::data::render_data::{RenderCharacterData, RenderData};
+use crate::physics::damper::Damper;
+
+const DELTA_TIME: f32 = 1.0 / 30.0;
+static mut WORLD: Option<LogicData> = None;
+fn world() -> &'static mut LogicData {
+    unsafe {
+        WORLD.as_mut().unwrap()
+    }
+}
 
 #[no_mangle]
 pub extern "C" fn start() {
     engine::log("begin start");
+    let mut world = LogicData{
+        character0: LogicCharacterData {
+            id: 1001,
+            transform: Default::default(),
+            move_controller: MoveController {
+                ..Default::default()
+            },
+        },
+    };
+
+    unsafe { WORLD = Some(world); }
     engine::log("after start")
 }
 
-#[no_mangle]
-pub extern "C" fn update(input: InputData) -> RenderData {
-    // let state = input.player_0.state;
-    // match state {
-    //     InputStateData::Fighting(fight_state) => {
-    //         let direction = fight_state.direction;
-    //         let magnitude = fight_state.magnitude;
-    //         engine::log(&format!("input, direction: {}, magnitude: {}", direction, magnitude));
-    //     }
-    //     InputStateData::Other => {
-    //         engine::log("input, other state");
-    //     }
-    // }
+fn update_player_move_controller(data: &mut MoveController, input: &InputPlayerData) {
+    const MAX_SPEED: f32 = 450.0;
+    match &input.state {
+        InputStateData::Fighting(fight_state) => {
+            let mut tar_vel = Vector2D {
+                x: fight_state.x,
+                y: fight_state.y,
+            };
+            let len = tar_vel.length();
+            if len > 1.0 {
+                tar_vel.x /= len;
+                tar_vel.y /= len;
+            }
+            tar_vel.x *= MAX_SPEED;
+            tar_vel.y *= MAX_SPEED;
+            data.tar_vel = tar_vel;
+        }
+        InputStateData::Other => {
+            engine::log("input, other state");
+        }
+    }
+}
 
-    let json = serde_json::to_string(&input).unwrap_or("failed to serialize input data".to_string());
-    engine::log(&format!("input: {}", json));
+fn update_player_locomotion(data: &mut LogicCharacterData, input: &InputPlayerData) {
+    let damper = Damper::new(0.15);
+    update_player_move_controller(&mut data.move_controller, input);
+    (data.transform.pos, data.move_controller.cur_vel) = damper.update_movement_2d(&data.transform.pos, &data.move_controller.cur_vel, &data.move_controller.tar_vel, DELTA_TIME);
 
-    let character = RenderCharacterData {
-        id: 1001,
-        transform: Transform2D {
-            position: Position {
-                x: 1231.0,
-                y: 789.0,
-            },
-            rotation: Rotation {
-                yaw: 16.0,
-            },
-        },
+    if data.move_controller.tar_vel.length() > 150.0 {
+        data.move_controller.tar_yaw = data.move_controller.cur_vel.yaw();
+    } else {
+        data.move_controller.tar_yaw = data.transform.yaw;
+    }
+    data.transform.yaw = damper.update_yaw(data.transform.yaw, data.move_controller.tar_yaw, DELTA_TIME);
+}
+
+fn update_player(data: &mut LogicCharacterData, input: &InputPlayerData) {
+    update_player_locomotion(data, input);
+}
+
+fn update_world(data: &mut LogicData, input: &InputData) {
+    update_player(&mut data.character0, &input.player_0);
+}
+
+fn get_render_character(data: &LogicCharacterData) -> RenderCharacterData {
+    let render_data = RenderCharacterData {
+        id: data.id,
+        transform: data.transform.clone(),
         motion_state: MotionState {
-            locomotion_speed: 0.456,
-            montage_id: 001,
-            montage_progress: 0.123,
+            locomotion_speed: data.move_controller.cur_vel.length(),
+            montage_id: 0,
+            montage_progress: 0.0,
         }
     };
-    
+    render_data
+}
+
+fn get_render_world(data: &LogicData) -> RenderData {
+    let character = get_render_character(&data.character0);
     let render_data = RenderData {
         generation: 0,
         character0: character,
     };
-
-    let json = serde_json::to_string(&render_data).unwrap_or("failed to serialize render data".to_string());
-    engine::log(&format!("render: {}", json));
     render_data
 }
 
 #[no_mangle]
-pub extern "C" fn q_add(a: i32, b: i32) -> i32 {
-    a + b
+pub extern "C" fn update(input: InputData) -> RenderData {
+    let mut world = world();
+    update_world(&mut world, &input);
+    get_render_world(&world)
+
+    // let json = serde_json::to_string(&input).unwrap_or("failed to serialize input data".to_string());
+    // engine::log(&format!("input: {}", json));
+
+
+
+    //
+    // let character = RenderCharacterData {
+    //     id: 1001,
+    //     transform: Transform2D {
+    //         pos: Vector2D { x: 0.0, y: 0.0 },
+    //         yaw: 0.0,
+    //     },
+    //     motion_state: MotionState {
+    //         locomotion_speed: 0.456,
+    //         montage_id: 001,
+    //         montage_progress: 0.123,
+    //     }
+    // };
+    //
+    // let render_data = RenderData {
+    //     generation: 0,
+    //     character0: character,
+    // };
+    //
+    // // let json = serde_json::to_string(&render_data).unwrap_or("failed to serialize render data".to_string());
+    // // engine::log(&format!("render: {}", json));
+    // render_data
 }

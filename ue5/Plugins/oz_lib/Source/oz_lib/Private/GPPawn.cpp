@@ -35,8 +35,8 @@ void AGPPawn::BeginPlay()
 	GPWrapper::LoadDLL();
 	Render_Generation = -1;
 	
-	// SetActorLocation(FVector(0.0f, 0.0f, 0.0f));
-	// SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
+	SetActorLocation(FVector(0.0f, 0.0f, 0.0f));
+	SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
 
 	SetupLocalInput();
 	GPWrapper::Start();
@@ -100,33 +100,59 @@ InputData AGPPawn::GetLocalInputData() const
 	return inputData;
 }
 
+void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const FGPRenderCharacterData& RenderData)
+{
+	if (Actor == nullptr)
+		return;
+	
+	Actor->SetActorLocationAndRotation(RenderData.transform.GetPosition(), RenderData.transform.GetRotation());
+	const USkeletalMeshComponent* SkeletalMeshComponent = Actor->GetComponentByClass<USkeletalMeshComponent>();
+	if (!SkeletalMeshComponent)
+	{
+	    UE_LOG(LogTemp, Error, TEXT("未找到 SkeletalMeshComponent！"));
+	    return;
+	}
+	UAnimInstance* AnimInstance = SkeletalMeshComponent->GetAnimInstance();
+	if (!AnimInstance)
+	{
+	    UE_LOG(LogTemp, Error, TEXT("未找到 AnimInstance！"));
+	    return;
+	}
+
+	const FName ParameterName = TEXT("Speed"); // 替换为你的混合树参数名称
+	const float ParameterValue = RenderData.motion_state.locomotion_speed;
+	FProperty* Property = AnimInstance->GetClass()->FindPropertyByName(ParameterName);
+	if (Property && Property->IsA<FDoubleProperty>())
+	{
+		if (const FDoubleProperty* FloatProperty = CastField<FDoubleProperty>(Property))
+	    {
+	        // 设置属性值
+	        FloatProperty->SetPropertyValue_InContainer(AnimInstance, ParameterValue);
+	        UE_LOG(LogTemp, Log, TEXT("设置 %s 为 %f"), *ParameterName.ToString(), ParameterValue);
+	    }
+	}
+	else
+	{
+	    UE_LOG(LogTemp, Warning, TEXT("找不到 Float 类型的属性 %s"), *ParameterName.ToString());
+	}
+}
+
 void AGPPawn::ApplyRenderData(const FGPRenderData& render_data)
 {
 	if (render_data.generation != Render_Generation)
 	{
 		Render_Generation = render_data.generation;
-		//     // 异步加载蓝图类
-		//     FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
-		//     StreamableManager.RequestAsyncLoad(
-		//         SoftObjectPath,
-		//         FStreamableDelegate::CreateUObject(this, &ARandomMover::OnBlueprintLoaded)
-		//     );
-		// 生成角色
-		// AActor* Actor = GetWorld()->SpawnActor<AActor>(BlueprintClass, SpawnLocation, SpawnRotation);
-		// if (Actor)
-		// {
-		//     SpawnedActors.Add(Actor);
-		//     UE_LOG(LogTemp, Log, TEXT("成功生成角色：%s"), *Actor->GetName());
-		// }
+		SpawnActor(render_data.character0);
 	}
+
+	ApplyCharacterRenderData(LocalActor, render_data.character0);
 }
 
-void AGPPawn::SpawnActor(int ModelID, const FVector& Location, const FRotator& Rotation)
+void AGPPawn::SpawnActor(const FGPRenderCharacterData &character)
 {
 	bool IsLocalCharacter = true;
 	
-	FString BlueprintPath = TEXT("/Game/Mixamo/Michelle/BP_Michelle");
-	// 将字符串路径转换为 FSoftObjectPath
+	FString BlueprintPath = TEXT("/Game/Blueprints/Characters/BP_Michelle.BP_Michelle_C");
 	FSoftObjectPath SoftObjectPath(BlueprintPath);
 	if (!SoftObjectPath.IsValid())
 	{
@@ -150,11 +176,11 @@ void AGPPawn::SpawnActor(int ModelID, const FVector& Location, const FRotator& R
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
 	StreamableManager.RequestAsyncLoad(
 	    SoftObjectPath,
-	    FStreamableDelegate::CreateLambda([this, IsLocalCharacter, BlueprintClass, Location, Rotation]()
+	    FStreamableDelegate::CreateLambda([this, IsLocalCharacter, BlueprintClass, character]()
 		{
 			UE_LOG(LogTemp, Log, TEXT("蓝图加载完"));
 	    	// 生成角色
-			if (AActor* Actor = GetWorld()->SpawnActor<AActor>(BlueprintClass, Location, Rotation))
+			if (AActor* Actor = GetWorld()->SpawnActor<AActor>(BlueprintClass, character.transform.GetPosition(), character.transform.GetRotation()))
 			{
 				 SpawnedActors.Add(Actor);
 				 UE_LOG(LogTemp, Log, TEXT("成功生成角色：%s"), *Actor->GetName());
@@ -162,6 +188,7 @@ void AGPPawn::SpawnActor(int ModelID, const FVector& Location, const FRotator& R
 				if(IsLocalCharacter)
 				{
 					LocalActor = Actor;
+					RootComponent = LocalActor->GetRootComponent();
 				}
 			}
 		})

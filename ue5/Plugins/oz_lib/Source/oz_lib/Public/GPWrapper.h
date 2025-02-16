@@ -21,7 +21,6 @@ public:
 	static FGPRenderData Update(const InputData &inputData);
 private:
 	inline static void* gp_dll_handle = nullptr;
-	inline static int (*gp_q_add)(int, int) = nullptr;
 	inline static void (*gp_start)() = nullptr;
 	inline static FGPRenderData (*gp_update)(InputData) = nullptr;
 };

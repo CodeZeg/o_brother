@@ -56,7 +56,6 @@ void GPWrapper::LoadDLL()
 	UE_LOG(LogGP, Display, TEXT("Load dll: %s"), *LibraryPath);
 	gp_dll_handle = FPlatformProcess::GetDllHandle(*LibraryPath);
 	Init_Engine(gp_dll_handle);
-	gp_q_add = static_cast<int(*)(int, int)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("q_add")));
 	gp_start = static_cast<void(*)()>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("start")));
 	gp_update = static_cast<FGPRenderData(*)(InputData)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("update")));
 }
@@ -70,17 +69,13 @@ void GPWrapper::UnLoadDLL()
 	// Free the dll handle
 	FPlatformProcess::FreeDllHandle(gp_dll_handle);
 	gp_dll_handle = nullptr;
-	gp_q_add = nullptr;
 	gp_start = nullptr;
 	gp_update = nullptr;
 }
 
 void GPWrapper::Start()
 {
-	int temp = gp_q_add(1561,312);
-	UE_LOG(LogGP, Display, TEXT("q_add: %d"), temp);
 	gp_start();
-	UE_LOG(LogGP, Display, TEXT("gp_start: %d"), temp);
 }
 
 FGPRenderData GPWrapper::Update(const InputData &inputData)

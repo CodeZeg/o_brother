@@ -33,7 +33,7 @@ private:
 	void OnInputMoveAxis2D(const FInputActionValue& Value);
 	InputData GetLocalInputData() const;
 	void ApplyRenderData(const FGPRenderData& render_data);
-	void SpawnActor(int ModelID, const FVector& Location, const FRotator& Rotation);
+	void SpawnActor(const FGPRenderCharacterData& character);
 
 	UPROPERTY()
 	TObjectPtr<AActor> LocalActor;			// Local player actor
