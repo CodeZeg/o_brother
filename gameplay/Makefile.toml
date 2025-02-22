@@ -20,7 +20,13 @@ args = ["target/wasm32v1-none/release/gameplay.wasm", "../minigame/wasm/gameplay
 [tasks.minigame]
 dependencies = ["build_wasm", "copy_wasm"]
 
+[tasks.schema_rust]
+command = "flatc"
+args = ["--rust", "-o", "./src/schema", "schema/render_data.fbs"]
+
+[tasks.schema_cpp]
+command = "flatc"
+args = ["--cpp", "-o", "../ue5/Plugins/oz_lib/Source/rust_lib/Public", "schema/render_data.fbs"]
 
 [tasks.schema]
-command = "flatc"
-args = ["--rust", "-o", "./src/schema", "schema/math.fbs", "schema/render_data.fbs"]
+dependencies = ["schema_rust", "schema_cpp"]

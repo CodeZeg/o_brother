@@ -54,7 +54,7 @@ void AGPPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	const InputData input_data = GetLocalInputData();
-	const FGPRenderData render_data = GPWrapper::Update(input_data);
+	const GPRenderData* render_data = GPWrapper::Update(input_data);
 	
 	ApplyRenderData(render_data);
 }
@@ -100,12 +100,12 @@ InputData AGPPawn::GetLocalInputData() const
 	return inputData;
 }
 
-void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const FGPRenderCharacterData& RenderData)
+void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const GPRenderCharacterData* RenderData)
 {
 	if (Actor == nullptr)
 		return;
 	
-	Actor->SetActorLocationAndRotation(RenderData.transform.GetPosition(), RenderData.transform.GetRotation());
+	Actor->SetActorLocationAndRotation(GetPosition(RenderData->transform()), GetRotation(RenderData->transform()));
 	const USkeletalMeshComponent* SkeletalMeshComponent = Actor->GetComponentByClass<USkeletalMeshComponent>();
 	if (!SkeletalMeshComponent)
 	{
@@ -120,7 +120,7 @@ void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const FGPRenderCh
 	}
 
 	const FName ParameterName = TEXT("Speed"); // 替换为你的混合树参数名称
-	const float ParameterValue = RenderData.motion_state.locomotion_speed;
+	const float ParameterValue = RenderData->motion_state()->locomotion_speed();
 	FProperty* Property = AnimInstance->GetClass()->FindPropertyByName(ParameterName);
 	if (Property && Property->IsA<FDoubleProperty>())
 	{
@@ -137,18 +137,18 @@ void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const FGPRenderCh
 	}
 }
 
-void AGPPawn::ApplyRenderData(const FGPRenderData& render_data)
+void AGPPawn::ApplyRenderData(const GPRenderData* render_data)
 {
-	if (render_data.generation != Render_Generation)
+	if (render_data->generation() != Render_Generation)
 	{
-		Render_Generation = render_data.generation;
-		SpawnActor(render_data.character0);
+		Render_Generation = render_data->generation();
+		SpawnActor(render_data->character0());
 	}
 
-	ApplyCharacterRenderData(LocalActor, render_data.character0);
+	ApplyCharacterRenderData(LocalActor, render_data->character0());
 }
 
-void AGPPawn::SpawnActor(const FGPRenderCharacterData &character)
+void AGPPawn::SpawnActor(const GPRenderCharacterData* character)
 {
 	bool IsLocalCharacter = true;
 	
@@ -171,16 +171,19 @@ void AGPPawn::SpawnActor(const FGPRenderCharacterData &character)
 	UE_LOG(LogTemp, Log, TEXT("成功加载蓝图类：%s"), *BlueprintClass->GetName());
 	
 	UE_LOG(LogTemp, Log, TEXT("开始异步加载蓝图：%s"), *BlueprintPath);
+
+	FVector SpawnLocation = GetPosition(character->transform());
+	FRotator SpawnRotation = GetRotation(character->transform());
 	
 	// 异步加载蓝图类
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
 	StreamableManager.RequestAsyncLoad(
 	    SoftObjectPath,
-	    FStreamableDelegate::CreateLambda([this, IsLocalCharacter, BlueprintClass, character]()
+	    FStreamableDelegate::CreateLambda([this, IsLocalCharacter, BlueprintClass, SpawnLocation, SpawnRotation]()
 		{
 			UE_LOG(LogTemp, Log, TEXT("蓝图加载完"));
 	    	// 生成角色
-			if (AActor* Actor = GetWorld()->SpawnActor<AActor>(BlueprintClass, character.transform.GetPosition(), character.transform.GetRotation()))
+			if (AActor* Actor = GetWorld()->SpawnActor<AActor>(BlueprintClass, SpawnLocation, SpawnRotation))
 			{
 				 SpawnedActors.Add(Actor);
 				 UE_LOG(LogTemp, Log, TEXT("成功生成角色：%s"), *Actor->GetName());

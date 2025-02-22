@@ -3,6 +3,7 @@
 
 #include "GPWrapper.h"
 #include "RenderDataWrapper.h"
+#include "render_data_generated.h"
 
 #include "Interfaces/IPluginManager.h"
 
@@ -57,7 +58,7 @@ void GPWrapper::LoadDLL()
 	gp_dll_handle = FPlatformProcess::GetDllHandle(*LibraryPath);
 	Init_Engine(gp_dll_handle);
 	gp_start = static_cast<void(*)()>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("start")));
-	gp_update = static_cast<FGPRenderData(*)(InputData)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("update")));
+	gp_update = static_cast<uint8*(*)(InputData)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("update")));
 }
 
 void GPWrapper::UnLoadDLL()
@@ -78,9 +79,41 @@ void GPWrapper::Start()
 	gp_start();
 }
 
-FGPRenderData GPWrapper::Update(const InputData &inputData)
+const GPRenderData* GPWrapper::Update(const InputData& inputData)
 {
-    return gp_update(inputData);
+    const uint8* buffer = gp_update(inputData);
+	const GPRenderData* renderData = GetGPRenderData(buffer);
+	return renderData;
+	// // 检查反序列化是否成功
+	// if (!renderData)
+	// {
+	// 	UE_LOG(LogTemp, Error, TEXT("Failed to deserialize GPRenderData!"));
+	// }
+	// else
+	// {
+	// 	int32 generation = renderData->generation();
+	// 	UE_LOG(LogTemp, Log, TEXT("Generation: %d"), generation);
+	// 	
+	// 	const gameplay::GPRenderCharacterData* character0 = renderData->character0();
+	// 	if (character0)
+	// 	{
+	// 		UE_LOG(LogTemp, Log, TEXT("Character0 ID: %d"), character0->id());
+	// 		UE_LOG(LogTemp, Log, TEXT("Character0 Position: (%f, %f)"), character0->transform()->pos().x(), character0->transform()->pos().y());
+	// 	}
+	//
+	// 	const flatbuffers::Vector<flatbuffers::Offset<gameplay::GPRenderCharacterData>>* monsters = renderData->monsters();
+	// 	if (monsters)
+	// 	{
+	// 		for (const auto& monster : *monsters)
+	// 		{
+	// 			UE_LOG(LogTemp, Log, TEXT("Monster ID: %d"), monster->id());
+	// 			UE_LOG(LogTemp, Log, TEXT("Monster Position: (%f, %f)"), monster->transform()->pos().x(), monster->transform()->pos().y());
+	// 		}
+	// 	}
+	// }
+	//
+	// FGPRenderData RenderData;
+	// return RenderData;
 }
 
 

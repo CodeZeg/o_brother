@@ -19,6 +19,11 @@
 			"Name": "oz_lib",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "rust_lib",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	]
 }

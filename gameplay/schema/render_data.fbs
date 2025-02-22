@@ -1,6 +1,12 @@
-include "math.fbs";
+struct GPVec2D {
+  x:float;
+  y:float;
+}
 
-namespace gameplay;
+struct GPTrans2D {
+  pos:GPVec2D;
+  yaw:float;
+}
 
 struct GPMotionState {
   locomotion_speed:float;

@@ -9,6 +9,12 @@
 #include "GameFramework/Pawn.h"
 #include "GPPawn.generated.h"
 
+namespace gameplay
+{
+	struct GPRenderCharacterData;
+	struct GPRenderData;
+}
+
 UCLASS()
 class OZ_LIB_API AGPPawn : public APawn
 {
@@ -32,8 +38,8 @@ private:
 	void SetupLocalInput();
 	void OnInputMoveAxis2D(const FInputActionValue& Value);
 	InputData GetLocalInputData() const;
-	void ApplyRenderData(const FGPRenderData& render_data);
-	void SpawnActor(const FGPRenderCharacterData& character);
+	void ApplyRenderData(const GPRenderData* render_data);
+	void SpawnActor(const GPRenderCharacterData* character);
 
 	UPROPERTY()
 	TObjectPtr<AActor> LocalActor;			// Local player actor

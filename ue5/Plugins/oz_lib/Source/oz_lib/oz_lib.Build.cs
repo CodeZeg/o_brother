@@ -39,6 +39,7 @@ public class oz_lib : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				"rust_lib"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
