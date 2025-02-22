@@ -1,0 +1,9 @@
+struct GPVec2D {
+  x:float;
+  y:float;
+}
+
+struct GPTrans2D {
+  pos:GPVec2D;
+  yaw:float;
+}

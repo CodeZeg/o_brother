@@ -8,7 +8,6 @@
 #include "GPPawn.h"
 #include "GPPlayerController.h"
 #include "GPPlayerState.h"
-#include "GPSpectator.h"
 
 AGPGameMode::AGPGameMode()
 {
@@ -17,7 +16,7 @@ AGPGameMode::AGPGameMode()
 	PlayerControllerClass = AGPPlayerController::StaticClass();
 	GameStateClass = AGPGameState::StaticClass();
 	PlayerStateClass = AGPPlayerState::StaticClass();
-	SpectatorClass = AGPSpectator::StaticClass();
+	SpectatorClass = nullptr;
 }
 
 void AGPGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)

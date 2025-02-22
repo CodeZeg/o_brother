@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "GPGameInstance.h"
 #include "GPWrapper.h"
+#include "input_data_generated.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 
@@ -53,8 +54,10 @@ void AGPPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	const InputData input_data = GetLocalInputData();
-	const GPRenderData* render_data = GPWrapper::Update(input_data);
+	flatbuffers::FlatBufferBuilder builder;
+	flatbuffers::Offset<GPInputData> input_data = GetLocalInputData(builder);
+	builder.Finish(input_data);
+	const GPRenderData* render_data = GPWrapper::Update(builder);
 	
 	ApplyRenderData(render_data);
 }
@@ -83,21 +86,18 @@ void AGPPawn::OnInputMoveAxis2D(const FInputActionValue& Value)
 	Input_Move_Axis2D.Y = input.X;
 }
 
-InputData AGPPawn::GetLocalInputData() const
+
+flatbuffers::Offset<GPInputData> AGPPawn::GetLocalInputData(flatbuffers::FlatBufferBuilder &builder) const
 {
-	// 创建 InputData 实例
-	InputData inputData;
-
-	// 设置 player_0 的 state 为 Fighting，并指定 direction 和 magnitude
-	inputData.player_0.state.tag = InputStateData_Fighting;
-	inputData.player_0.state.data.fighting.x = Input_Move_Axis2D.X;
-	inputData.player_0.state.data.fighting.y = Input_Move_Axis2D.Y;
-
-	// 设置 player_0 的 action
-	inputData.player_0.action.tag = InputActionData_Tag::None;
-	inputData.player_0.action.data.choseCard = 1; // 根据需要设置 choseCard 的值
-
-	return inputData;
+	auto move_data = CreateGPInputMoveData(builder, Input_Move_Axis2D.X, Input_Move_Axis2D.Y);
+	auto action_data = CreateInputAction_ChoseCard(builder, 1); // 设置 choseCard 的值
+	auto player_data = CreateGPInputPlayerData(builder,
+		GPInputStateData_GPInputMoveData, move_data.Union(),
+		GPInputActionData_InputAction_ChoseCard, action_data.Union()
+		); 
+	auto players = builder.CreateVector({player_data});
+	auto input_data = CreateGPInputData(builder, players);
+	return input_data;
 }
 
 void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const GPRenderCharacterData* RenderData)

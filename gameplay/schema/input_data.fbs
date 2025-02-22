@@ -1,0 +1,27 @@
+table GPInputMoveData {
+    x: float;
+    y: float;
+}
+
+union GPInputStateData {
+    GPInputMoveData,
+}
+
+table InputAction_ChoseCard {
+    card_id: uint;
+}
+
+union GPInputActionData {
+    InputAction_ChoseCard,
+}
+
+table GPInputPlayerData {
+    state: GPInputStateData;
+    action: GPInputActionData;
+}
+
+table GPInputData {
+    player_inputs: [GPInputPlayerData];
+}
+
+root_type GPInputData;

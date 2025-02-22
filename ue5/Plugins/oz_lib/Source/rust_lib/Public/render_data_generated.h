@@ -13,9 +13,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
               FLATBUFFERS_VERSION_REVISION == 10,
              "Non-compatible flatbuffers version included");
 
-struct GPVec2D;
-
-struct GPTrans2D;
+#include "math_generated.h"
 
 struct GPMotionState;
 
@@ -24,52 +22,6 @@ struct GPRenderCharacterDataBuilder;
 
 struct GPRenderData;
 struct GPRenderDataBuilder;
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) GPVec2D FLATBUFFERS_FINAL_CLASS {
- private:
-  float x_;
-  float y_;
-
- public:
-  GPVec2D()
-      : x_(0),
-        y_(0) {
-  }
-  GPVec2D(float _x, float _y)
-      : x_(::flatbuffers::EndianScalar(_x)),
-        y_(::flatbuffers::EndianScalar(_y)) {
-  }
-  float x() const {
-    return ::flatbuffers::EndianScalar(x_);
-  }
-  float y() const {
-    return ::flatbuffers::EndianScalar(y_);
-  }
-};
-FLATBUFFERS_STRUCT_END(GPVec2D, 8);
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) GPTrans2D FLATBUFFERS_FINAL_CLASS {
- private:
-  GPVec2D pos_;
-  float yaw_;
-
- public:
-  GPTrans2D()
-      : pos_(),
-        yaw_(0) {
-  }
-  GPTrans2D(const GPVec2D &_pos, float _yaw)
-      : pos_(_pos),
-        yaw_(::flatbuffers::EndianScalar(_yaw)) {
-  }
-  const GPVec2D &pos() const {
-    return pos_;
-  }
-  float yaw() const {
-    return ::flatbuffers::EndianScalar(yaw_);
-  }
-};
-FLATBUFFERS_STRUCT_END(GPTrans2D, 12);
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) GPMotionState FLATBUFFERS_FINAL_CLASS {
  private:

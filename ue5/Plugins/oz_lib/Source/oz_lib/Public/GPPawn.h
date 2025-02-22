@@ -3,17 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InputDataWrapper.h"
 #include "InputMappingContext.h"
+#include "input_data_generated.h"
 #include "RenderDataWrapper.h"
 #include "GameFramework/Pawn.h"
 #include "GPPawn.generated.h"
-
-namespace gameplay
-{
-	struct GPRenderCharacterData;
-	struct GPRenderData;
-}
 
 UCLASS()
 class OZ_LIB_API AGPPawn : public APawn
@@ -37,7 +31,7 @@ public:
 private:
 	void SetupLocalInput();
 	void OnInputMoveAxis2D(const FInputActionValue& Value);
-	InputData GetLocalInputData() const;
+	flatbuffers::Offset<GPInputData> GetLocalInputData(flatbuffers::FlatBufferBuilder &builder) const;
 	void ApplyRenderData(const GPRenderData* render_data);
 	void SpawnActor(const GPRenderCharacterData* character);
 

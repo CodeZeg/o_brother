@@ -52,6 +52,7 @@ public class oz_lib : ModuleRules
 			}
 			);
 		
+		// 添加 gameplay.dll 依赖
 		RuntimeDependencies.Add("$(PluginDir)/ThirdParty/Win64/gameplay.dll");
 	}
 }
