@@ -318,8 +318,7 @@ impl<'a> flatbuffers::Follow<'a> for GPRenderData<'a> {
 
 impl<'a> GPRenderData<'a> {
   pub const VT_GENERATION: flatbuffers::VOffsetT = 4;
-  pub const VT_CHARACTER0: flatbuffers::VOffsetT = 6;
-  pub const VT_MONSTERS: flatbuffers::VOffsetT = 8;
+  pub const VT_ACTORS: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -331,8 +330,7 @@ impl<'a> GPRenderData<'a> {
     args: &'args GPRenderDataArgs<'args>
   ) -> flatbuffers::WIPOffset<GPRenderData<'bldr>> {
     let mut builder = GPRenderDataBuilder::new(_fbb);
-    if let Some(x) = args.monsters { builder.add_monsters(x); }
-    if let Some(x) = args.character0 { builder.add_character0(x); }
+    if let Some(x) = args.actors { builder.add_actors(x); }
     builder.add_generation(args.generation);
     builder.finish()
   }
@@ -346,18 +344,11 @@ impl<'a> GPRenderData<'a> {
     unsafe { self._tab.get::<i32>(GPRenderData::VT_GENERATION, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn character0(&self) -> Option<GPRenderCharacterData<'a>> {
+  pub fn actors(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<GPRenderCharacterData>>(GPRenderData::VT_CHARACTER0, None)}
-  }
-  #[inline]
-  pub fn monsters(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData>>>>(GPRenderData::VT_MONSTERS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData>>>>(GPRenderData::VT_ACTORS, None)}
   }
 }
 
@@ -369,24 +360,21 @@ impl flatbuffers::Verifiable for GPRenderData<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i32>("generation", Self::VT_GENERATION, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<GPRenderCharacterData>>("character0", Self::VT_CHARACTER0, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<GPRenderCharacterData>>>>("monsters", Self::VT_MONSTERS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<GPRenderCharacterData>>>>("actors", Self::VT_ACTORS, false)?
      .finish();
     Ok(())
   }
 }
 pub struct GPRenderDataArgs<'a> {
     pub generation: i32,
-    pub character0: Option<flatbuffers::WIPOffset<GPRenderCharacterData<'a>>>,
-    pub monsters: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData<'a>>>>>,
+    pub actors: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData<'a>>>>>,
 }
 impl<'a> Default for GPRenderDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     GPRenderDataArgs {
       generation: 0,
-      character0: None,
-      monsters: None,
+      actors: None,
     }
   }
 }
@@ -401,12 +389,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> GPRenderDataBuilder<'a, 'b, A> 
     self.fbb_.push_slot::<i32>(GPRenderData::VT_GENERATION, generation, 0);
   }
   #[inline]
-  pub fn add_character0(&mut self, character0: flatbuffers::WIPOffset<GPRenderCharacterData<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<GPRenderCharacterData>>(GPRenderData::VT_CHARACTER0, character0);
-  }
-  #[inline]
-  pub fn add_monsters(&mut self, monsters: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<GPRenderCharacterData<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(GPRenderData::VT_MONSTERS, monsters);
+  pub fn add_actors(&mut self, actors: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<GPRenderCharacterData<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(GPRenderData::VT_ACTORS, actors);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> GPRenderDataBuilder<'a, 'b, A> {
@@ -427,8 +411,7 @@ impl core::fmt::Debug for GPRenderData<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("GPRenderData");
       ds.field("generation", &self.generation());
-      ds.field("character0", &self.character0());
-      ds.field("monsters", &self.monsters());
+      ds.field("actors", &self.actors());
       ds.finish()
   }
 }

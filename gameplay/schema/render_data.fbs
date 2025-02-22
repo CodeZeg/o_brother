@@ -14,8 +14,7 @@ table GPRenderCharacterData {
 
 table GPRenderData {
   generation:int;
-  character0:GPRenderCharacterData;
-  monsters:[GPRenderCharacterData];
+  actors:[GPRenderCharacterData];
 }
 
 root_type GPRenderData;

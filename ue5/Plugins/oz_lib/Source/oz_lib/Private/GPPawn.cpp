@@ -102,7 +102,7 @@ flatbuffers::Offset<GPInputData> AGPPawn::GetLocalInputData(flatbuffers::FlatBuf
 
 void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const GPRenderCharacterData* RenderData)
 {
-	if (Actor == nullptr)
+	if (!Actor->IsValidLowLevel())
 		return;
 	
 	Actor->SetActorLocationAndRotation(GetPosition(RenderData->transform()), GetRotation(RenderData->transform()));
@@ -128,7 +128,7 @@ void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const GPRenderCha
 	    {
 	        // 设置属性值
 	        FloatProperty->SetPropertyValue_InContainer(AnimInstance, ParameterValue);
-	        UE_LOG(LogTemp, Log, TEXT("设置 %s 为 %f"), *ParameterName.ToString(), ParameterValue);
+	        // UE_LOG(LogTemp, Log, TEXT("设置 %s 为 %f"), *ParameterName.ToString(), ParameterValue);
 	    }
 	}
 	else
@@ -139,20 +139,67 @@ void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const GPRenderCha
 
 void AGPPawn::ApplyRenderData(const GPRenderData* render_data)
 {
+	const auto actors = render_data->actors();
 	if (render_data->generation() != Render_Generation)
 	{
 		Render_Generation = render_data->generation();
-		SpawnActor(render_data->character0());
+		TSet<int32> SrcIDs;
+		SpawnedActors.GetKeys(SrcIDs);
+		TSet<int32> DstIDs;
+		for(auto it = actors->begin(); it!= actors->end(); ++it)
+		{
+			DstIDs.Add(it->id());
+		}
+		
+		// 删除, 之前有的, 但是新的中没有的
+		for (const int32& SrcID : SrcIDs)
+		{
+			if (!DstIDs.Contains(SrcID))
+			{
+				if (const TObjectPtr<AActor> Actor = SpawnedActors.FindRef(SrcID))
+				{
+					if(Actor->IsValidLowLevelFast())
+					{
+						Actor->Destroy();
+					}
+					SpawnedActors.Remove(SrcID);
+				}
+			}
+		}
+		
+		// 新增, 新的中有的, 但是之前没有的
+		for(auto it = actors->begin(); it!= actors->end(); ++it)
+		{
+			if (!SrcIDs.Contains(it->id()))
+			{
+				SpawnActor(*it);
+			}
+		}
 	}
 
-	ApplyCharacterRenderData(LocalActor, render_data->character0());
+	// 修改, 更新每个actor的数据
+	for(auto it = actors->begin(); it!= actors->end(); ++it)
+	{
+		auto UEActor = SpawnedActors.FindRef(it->id());
+		ApplyCharacterRenderData(UEActor, *it);
+	}
 }
 
 void AGPPawn::SpawnActor(const GPRenderCharacterData* character)
 {
-	bool IsLocalCharacter = true;
-	
-	FString BlueprintPath = TEXT("/Game/Blueprints/Characters/BP_Michelle.BP_Michelle_C");
+	const auto character_id = character->id();
+	bool IsLocalCharacter = character_id == 1001;
+
+	FString BlueprintPath;
+	if (IsLocalCharacter)
+	{
+		BlueprintPath = TEXT("/Game/Blueprints/Characters/BP_Michelle.BP_Michelle_C");
+	}
+	else
+		{
+		BlueprintPath = TEXT("/Game/Blueprints/Characters/BP_Ortiz.BP_Ortiz_C");
+	}
+
 	FSoftObjectPath SoftObjectPath(BlueprintPath);
 	if (!SoftObjectPath.IsValid())
 	{
@@ -179,13 +226,13 @@ void AGPPawn::SpawnActor(const GPRenderCharacterData* character)
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
 	StreamableManager.RequestAsyncLoad(
 	    SoftObjectPath,
-	    FStreamableDelegate::CreateLambda([this, IsLocalCharacter, BlueprintClass, SpawnLocation, SpawnRotation]()
+	    FStreamableDelegate::CreateLambda([this, character_id, IsLocalCharacter, BlueprintClass, SpawnLocation, SpawnRotation]()
 		{
 			UE_LOG(LogTemp, Log, TEXT("蓝图加载完"));
 	    	// 生成角色
 			if (AActor* Actor = GetWorld()->SpawnActor<AActor>(BlueprintClass, SpawnLocation, SpawnRotation))
 			{
-				 SpawnedActors.Add(Actor);
+				 SpawnedActors.Add(character_id, Actor);
 				 UE_LOG(LogTemp, Log, TEXT("成功生成角色：%s"), *Actor->GetName());
 
 				if(IsLocalCharacter)

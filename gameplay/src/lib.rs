@@ -48,9 +48,52 @@ fn world() -> &'static mut LogicData {
     }
 }
 
+struct LcgRng {
+    state: u64,
+}
+
+impl LcgRng {
+    fn new(seed: u64) -> Self {
+        Self { state: seed }
+    }
+
+    fn next_u32(&mut self) -> u32 {
+        self.state = self.state.wrapping_mul(6364136223846793005).wrapping_add(1);
+        (self.state >> 32) as u32
+    }
+
+    fn random_pos(&mut self) -> Vector2D{
+        let x = ((self.next_u32() % 2000) as i32 - 1000) as f32;
+        let y = ((self.next_u32() % 2000) as i32 - 1000) as f32;
+        Vector2D {
+            x,
+            y,
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn start() {
     engine::log("begin start");
+
+    let mut rng = LcgRng::new(42);
+
+    // 随机刷20个怪
+    let mut monsters = Vec::new();
+    for i in 0..20 {
+        let mut monster = LogicCharacterData {
+            id: i + 2000,
+            transform: Transform2D {
+                pos: rng.random_pos(),
+                yaw: 0.0,
+            },
+            move_controller: MoveController {
+                ..Default::default()
+            }
+        };
+        monsters.push(monster);
+    };
+
     let mut world = LogicData{
         character0: LogicCharacterData {
             id: 1001,
@@ -59,7 +102,7 @@ pub extern "C" fn start() {
                 ..Default::default()
             },
         },
-        monsters: vec![],
+        monsters,
     };
 
     unsafe { WORLD = Some(world); }
@@ -133,14 +176,15 @@ fn get_render_character_new(
 
 fn get_render_world_new(data: &LogicData) -> *const u8 {
     let mut builder = FlatBufferBuilder::new();
+    let mut actors = Vec::new();
     let (ch0_id, ch0_trans, ch0_motion_state) = get_render_character_new(&data.character0);
     let character0 = GPRenderCharacterData::create(&mut builder, &GPRenderCharacterDataArgs {
         id: ch0_id,
         transform: Some(&ch0_trans),
         motion_state: Some(&ch0_motion_state),
     });
+    actors.push(character0);
 
-    let mut monsters = Vec::new();
     for monster_data in data.monsters.iter() {
         let (monster_id, monster_trans, monster_motion_state) = get_render_character_new(&monster_data);
         let monster = GPRenderCharacterData::create(&mut builder, &GPRenderCharacterDataArgs {
@@ -148,15 +192,15 @@ fn get_render_world_new(data: &LogicData) -> *const u8 {
             transform: Some(&monster_trans),
             motion_state: Some(&monster_motion_state),
         });
-        monsters.push(monster);
+        actors.push(monster);
     }
-    let monsters = builder.create_vector(&monsters);
+
+    let actors = builder.create_vector(&actors);
     let render_data = GPRenderData::create(
         &mut builder,
         &GPRenderDataArgs {
             generation: 0,
-            character0: Some(character0),
-            monsters: Some(monsters),
+            actors: Some(actors),
         }
     );
 

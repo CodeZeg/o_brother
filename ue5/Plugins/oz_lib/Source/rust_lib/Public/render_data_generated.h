@@ -117,26 +117,20 @@ struct GPRenderData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef GPRenderDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_GENERATION = 4,
-    VT_CHARACTER0 = 6,
-    VT_MONSTERS = 8
+    VT_ACTORS = 6
   };
   int32_t generation() const {
     return GetField<int32_t>(VT_GENERATION, 0);
   }
-  const GPRenderCharacterData *character0() const {
-    return GetPointer<const GPRenderCharacterData *>(VT_CHARACTER0);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>> *monsters() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>> *>(VT_MONSTERS);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>> *actors() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>> *>(VT_ACTORS);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_GENERATION, 4) &&
-           VerifyOffset(verifier, VT_CHARACTER0) &&
-           verifier.VerifyTable(character0()) &&
-           VerifyOffset(verifier, VT_MONSTERS) &&
-           verifier.VerifyVector(monsters()) &&
-           verifier.VerifyVectorOfTables(monsters()) &&
+           VerifyOffset(verifier, VT_ACTORS) &&
+           verifier.VerifyVector(actors()) &&
+           verifier.VerifyVectorOfTables(actors()) &&
            verifier.EndTable();
   }
 };
@@ -148,11 +142,8 @@ struct GPRenderDataBuilder {
   void add_generation(int32_t generation) {
     fbb_.AddElement<int32_t>(GPRenderData::VT_GENERATION, generation, 0);
   }
-  void add_character0(::flatbuffers::Offset<GPRenderCharacterData> character0) {
-    fbb_.AddOffset(GPRenderData::VT_CHARACTER0, character0);
-  }
-  void add_monsters(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>>> monsters) {
-    fbb_.AddOffset(GPRenderData::VT_MONSTERS, monsters);
+  void add_actors(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>>> actors) {
+    fbb_.AddOffset(GPRenderData::VT_ACTORS, actors);
   }
   explicit GPRenderDataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -168,11 +159,9 @@ struct GPRenderDataBuilder {
 inline ::flatbuffers::Offset<GPRenderData> CreateGPRenderData(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int32_t generation = 0,
-    ::flatbuffers::Offset<GPRenderCharacterData> character0 = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>>> monsters = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>>> actors = 0) {
   GPRenderDataBuilder builder_(_fbb);
-  builder_.add_monsters(monsters);
-  builder_.add_character0(character0);
+  builder_.add_actors(actors);
   builder_.add_generation(generation);
   return builder_.Finish();
 }
@@ -180,14 +169,12 @@ inline ::flatbuffers::Offset<GPRenderData> CreateGPRenderData(
 inline ::flatbuffers::Offset<GPRenderData> CreateGPRenderDataDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int32_t generation = 0,
-    ::flatbuffers::Offset<GPRenderCharacterData> character0 = 0,
-    const std::vector<::flatbuffers::Offset<GPRenderCharacterData>> *monsters = nullptr) {
-  auto monsters__ = monsters ? _fbb.CreateVector<::flatbuffers::Offset<GPRenderCharacterData>>(*monsters) : 0;
+    const std::vector<::flatbuffers::Offset<GPRenderCharacterData>> *actors = nullptr) {
+  auto actors__ = actors ? _fbb.CreateVector<::flatbuffers::Offset<GPRenderCharacterData>>(*actors) : 0;
   return CreateGPRenderData(
       _fbb,
       generation,
-      character0,
-      monsters__);
+      actors__);
 }
 
 inline const GPRenderData *GetGPRenderData(const void *buf) {

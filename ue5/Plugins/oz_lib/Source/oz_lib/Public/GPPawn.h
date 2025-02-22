@@ -34,11 +34,9 @@ private:
 	flatbuffers::Offset<GPInputData> GetLocalInputData(flatbuffers::FlatBufferBuilder &builder) const;
 	void ApplyRenderData(const GPRenderData* render_data);
 	void SpawnActor(const GPRenderCharacterData* character);
-
-	UPROPERTY()
+	
 	TObjectPtr<AActor> LocalActor;			// Local player actor
-	UPROPERTY()
-	TArray<TObjectPtr<AActor>> SpawnedActors; // All spawned actors
+	TMap<int32, TObjectPtr<AActor>> SpawnedActors; // All spawned actors
 private:
 	UPROPERTY(EditAnywhere, Category = "GPPawn", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> IMC_Local_PLayer;
