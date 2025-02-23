@@ -26,6 +26,17 @@ impl Vector2D {
         sqrtf(self.x * self.x + self.y * self.y)
     }
 
+    pub fn normalize(&self) -> Vector2D {
+        let length = self.length();
+        if length == 0.0 {
+            return Vector2D::default();
+        }
+        Vector2D {
+            x: self.x / length,
+            y: self.y / length,
+        }
+    }
+
     pub fn yaw(&self) -> f32 {
         atan2f(self.y, self.x) * (180.0 / core::f32::consts::PI) - 90.0
     }

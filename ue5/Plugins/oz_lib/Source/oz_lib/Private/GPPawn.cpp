@@ -8,6 +8,8 @@
 #include "GPGameInstance.h"
 #include "GPWrapper.h"
 #include "input_data_generated.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 
@@ -25,7 +27,7 @@ AGPPawn::AGPPawn()
 	IA_Move = Cast<UInputAction>(StaticLoadAsset(UInputAction::StaticClass(), FTopLevelAssetPath(TEXT("/Game/Input/IA_Move.IA_Move")), LOAD_None));
 	// IMC_Local_PLayer = TObjectPtr<UInputMappingContext>(FSoftObjectPath("/Game/Input/IMC_Player.IMC_Player"));
 	// IA_Move = TObjectPtr<UInputAction>(FSoftObjectPath("/Game/Input/IA_Move.IA_Move"));
-	Render_Generation = -1;
+	Actor_Render_Generation = -1;
 }
 
 // Called when the game starts or when spawned
@@ -34,7 +36,8 @@ void AGPPawn::BeginPlay()
 	UE_LOG(LogGamePlay, Log, TEXT("AGPPawn::BeginPlay"))
 	Super::BeginPlay();
 	GPWrapper::LoadDLL();
-	Render_Generation = -1;
+	Actor_Render_Generation = -1;
+	Effect_Render_Generation = -1;
 	
 	SetActorLocation(FVector(0.0f, 0.0f, 0.0f));
 	SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
@@ -137,18 +140,60 @@ void ApplyCharacterRenderData(const TObjectPtr<AActor>& Actor, const GPRenderCha
 	}
 }
 
+void AGPPawn::PlayEffect(const GPRenderEffectData* EffectData)
+{
+	const int32 EffectID = EffectData->effect_id();
+	const FVector Location = GetPosition(EffectData->transform());
+	const FRotator Rotation = GetRotation(EffectData->transform());
+	FString NiagaraSystemPath;
+	FVector Scale = FVector::OneVector;
+	if (EffectData->effect_res_id() == 10001)
+	{
+		NiagaraSystemPath = TEXT("/Game/Vefects/Knife_light/VFX/NE_attack02.NE_attack02");
+		Scale *= 2.0f;
+	}
+	else //if (EffectData->effect_res_id() == 20001)
+	{
+		NiagaraSystemPath = TEXT("/Game/Vefects/Zap_VFX/VFX/Zap/Particles/NS_Zap_01_Red.NS_Zap_01_Red");
+	}
+
+	UE_LOG(LogGamePlay, Display, TEXT("PlayEffect: %s，ID: %d"), *NiagaraSystemPath, EffectID);
+	
+	// 加载NiagaraSystem
+	UNiagaraSystem* NiagaraSystem = LoadObject<UNiagaraSystem>(nullptr, *NiagaraSystemPath);
+	if (!NiagaraSystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load NiagaraSystem at path: %s"), *NiagaraSystemPath);
+		return;
+	}
+
+	// 获取当前世界的上下文
+	const UWorld* World = GetWorld();
+
+	// 创建并播放Niagara特效
+	UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, NiagaraSystem, Location, Rotation, Scale);
+	if (!NiagaraComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to spawn NiagaraSystem at location"));
+		return;
+	}
+
+	SpawnedEffects.Add(EffectID, NiagaraComponent);
+}
+
 void AGPPawn::ApplyRenderData(const GPRenderData* render_data)
 {
 	const auto actors = render_data->actors();
-	if (render_data->generation() != Render_Generation)
+	// 增删 actor
+	if (render_data->actors_generation() != Actor_Render_Generation)
 	{
-		Render_Generation = render_data->generation();
+		Actor_Render_Generation = render_data->actors_generation();
 		TSet<int32> SrcIDs;
 		SpawnedActors.GetKeys(SrcIDs);
 		TSet<int32> DstIDs;
 		for(auto it = actors->begin(); it!= actors->end(); ++it)
 		{
-			DstIDs.Add(it->id());
+			DstIDs.Add(it->actor_id());
 		}
 		
 		// 删除, 之前有的, 但是新的中没有的
@@ -170,7 +215,7 @@ void AGPPawn::ApplyRenderData(const GPRenderData* render_data)
 		// 新增, 新的中有的, 但是之前没有的
 		for(auto it = actors->begin(); it!= actors->end(); ++it)
 		{
-			if (!SrcIDs.Contains(it->id()))
+			if (!SrcIDs.Contains(it->actor_id()))
 			{
 				SpawnActor(*it);
 			}
@@ -180,23 +225,71 @@ void AGPPawn::ApplyRenderData(const GPRenderData* render_data)
 	// 修改, 更新每个actor的数据
 	for(auto it = actors->begin(); it!= actors->end(); ++it)
 	{
-		auto UEActor = SpawnedActors.FindRef(it->id());
+		auto UEActor = SpawnedActors.FindRef(it->actor_id());
 		ApplyCharacterRenderData(UEActor, *it);
+	}
+
+	// 本地玩家控制角色
+	if(!LocalActor->IsValidLowLevel())
+	{
+		LocalActor = SpawnedActors.FindRef(1001);
+		if(LocalActor)
+		{
+			RootComponent = LocalActor->GetRootComponent();
+		}
+	}
+
+	// 增删 effect
+	if (render_data->effects_generation() != Effect_Render_Generation)
+	{
+		Effect_Render_Generation = render_data->effects_generation();
+		TSet<int32> SrcIDs;
+		SpawnedEffects.GetKeys(SrcIDs);
+		TSet<int32> DstIDs;
+		const auto effects = render_data->effects();
+		for(auto it = effects->begin(); it!= effects->end(); ++it)
+		{
+			DstIDs.Add(it->effect_id());
+		}
+		
+		// 删除, 之前有的, 但是新的中没有的
+		for (const int32& SrcID : SrcIDs)
+		{
+			if (!DstIDs.Contains(SrcID))
+			{
+				if (const TObjectPtr<UNiagaraComponent> Effect = SpawnedEffects.FindRef(SrcID))
+				{
+					if(Effect->IsValidLowLevelFast())
+					{
+						Effect->DestroyComponent();
+					}
+					SpawnedEffects.Remove(SrcID);
+				}
+			}
+		}
+		
+		// 新增, 新的中有的, 但是之前没有的
+		for(auto it = effects->begin(); it!= effects->end(); ++it)
+		{
+			if (!SrcIDs.Contains(it->effect_id()))
+			{
+				PlayEffect(*it);
+			}
+		}
 	}
 }
 
 void AGPPawn::SpawnActor(const GPRenderCharacterData* character)
 {
-	const auto character_id = character->id();
-	bool IsLocalCharacter = character_id == 1001;
-
+	const auto actor_id = character->actor_id();
+	const auto actor_res_id = character->actor_res_id();
 	FString BlueprintPath;
-	if (IsLocalCharacter)
+	if (actor_res_id == 1001)
 	{
 		BlueprintPath = TEXT("/Game/Blueprints/Characters/BP_Michelle.BP_Michelle_C");
 	}
 	else
-		{
+	{
 		BlueprintPath = TEXT("/Game/Blueprints/Characters/BP_Ortiz.BP_Ortiz_C");
 	}
 
@@ -211,14 +304,12 @@ void AGPPawn::SpawnActor(const GPRenderCharacterData* character)
 	UClass* BlueprintClass = LoadClass<AActor>(nullptr, *BlueprintPath);
 	if (BlueprintClass == nullptr)
 	{
-	    UE_LOG(LogTemp, Error, TEXT("无法加载蓝图类：%s"), *BlueprintPath);
+	    UE_LOG(LogTemp, Error, TEXT("无法加载蓝图类：%s"), *BlueprintPath); 
 	    return;
 	}
 	
-	UE_LOG(LogTemp, Log, TEXT("成功加载蓝图类：%s"), *BlueprintClass->GetName());
-	
-	UE_LOG(LogTemp, Log, TEXT("开始异步加载蓝图：%s"), *BlueprintPath);
-
+	// UE_LOG(LogTemp, Log, TEXT("成功加载蓝图类：%s"), *BlueprintClass->GetName());
+	// UE_LOG(LogTemp, Log, TEXT("开始异步加载蓝图：%s"), *BlueprintPath);
 	FVector SpawnLocation = GetPosition(character->transform());
 	FRotator SpawnRotation = GetRotation(character->transform());
 	
@@ -226,20 +317,14 @@ void AGPPawn::SpawnActor(const GPRenderCharacterData* character)
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
 	StreamableManager.RequestAsyncLoad(
 	    SoftObjectPath,
-	    FStreamableDelegate::CreateLambda([this, character_id, IsLocalCharacter, BlueprintClass, SpawnLocation, SpawnRotation]()
+	    FStreamableDelegate::CreateLambda([this, actor_id, BlueprintClass, SpawnLocation, SpawnRotation]()
 		{
-			UE_LOG(LogTemp, Log, TEXT("蓝图加载完"));
+			// UE_LOG(LogTemp, Log, TEXT("蓝图加载完"));
 	    	// 生成角色
 			if (AActor* Actor = GetWorld()->SpawnActor<AActor>(BlueprintClass, SpawnLocation, SpawnRotation))
 			{
-				 SpawnedActors.Add(character_id, Actor);
-				 UE_LOG(LogTemp, Log, TEXT("成功生成角色：%s"), *Actor->GetName());
-
-				if(IsLocalCharacter)
-				{
-					LocalActor = Actor;
-					RootComponent = LocalActor->GetRootComponent();
-				}
+				 SpawnedActors.Add(actor_id, Actor);
+				 // UE_LOG(LogTemp, Log, TEXT("成功生成角色：%s"), *Actor->GetName());
 			}
 		})
 	);
