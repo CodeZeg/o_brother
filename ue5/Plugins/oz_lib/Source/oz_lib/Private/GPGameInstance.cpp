@@ -2,12 +2,16 @@
 
 
 #include "GPGameInstance.h"
+#include "WAMRWrapper.h"
 
 DEFINE_LOG_CATEGORY(LogGamePlay);
 
 void UGPGameInstance::Init()
 {
 	Super::Init();
+	WAMRWrapper::LoadDLL();
+	WAMRWrapper::wasm_runtime_init();
+	UE_LOG(LogGamePlay, Log, TEXT("init wasm runtime ok..."));
 	UE_LOG(LogGamePlay, Log, TEXT("GPGameInstance::Init"));
 }
 void UGPGameInstance::Shutdown()
