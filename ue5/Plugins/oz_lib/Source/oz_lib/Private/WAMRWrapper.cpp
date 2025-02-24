@@ -15,7 +15,7 @@ void WAMRWrapper::LoadDLL()
 	// Add on the relative location of the third party dll and load it
 	FString LibraryPath;
 #if PLATFORM_WINDOWS
-	LibraryPath = FPaths::Combine(*BaseDir, TEXT("ThirdParty/warm/libiwasm.dll"));
+	LibraryPath = FPaths::Combine(*BaseDir, TEXT("ThirdParty/wamr/libiwasm.dll"));
 #endif // PLATFORM_WINDOWS
 
 	gp_dll_handle = FPlatformProcess::GetDllHandle(*LibraryPath);

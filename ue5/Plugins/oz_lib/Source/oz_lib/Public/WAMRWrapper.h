@@ -2,8 +2,10 @@
 
 #pragma once
 
-DECLARE_LOG_CATEGORY_EXTERN(LogGP, Log, All);
-
+#include "CoreMinimal.h"
+#include "InputDataWrapper.h"
+#include "RenderDataWrapper.h"
+#include "render_data_generated.h"
 
 /**
  * 
