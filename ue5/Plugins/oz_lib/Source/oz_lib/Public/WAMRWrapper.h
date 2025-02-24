@@ -6,6 +6,7 @@
 #include "InputDataWrapper.h"
 #include "RenderDataWrapper.h"
 #include "render_data_generated.h"
+#include "wasm_export.h"
 
 /**
  * 
@@ -14,8 +15,10 @@ class WAMRWrapper
 {
 public:
 	static void LoadDLL();
-	static void wasm_runtime_init();
+	static bool wasm_runtime_init();
+	static bool wasm_runtime_full_init(RuntimeInitArgs *init_args);
 private:
 	inline static void* gp_dll_handle = nullptr;
-	inline static void (*vm_init)() = nullptr;
+	inline static bool (*vm_init)() = nullptr;
+	inline static bool (*vm_full_init)(RuntimeInitArgs *init_args) = nullptr;
 };

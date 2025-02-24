@@ -19,10 +19,18 @@ void WAMRWrapper::LoadDLL()
 #endif // PLATFORM_WINDOWS
 
 	gp_dll_handle = FPlatformProcess::GetDllHandle(*LibraryPath);
-	vm_init = static_cast<void(*)()>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("wasm_runtime_init")));
+	vm_init = static_cast<bool(*)()>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("wasm_runtime_init")));
+	vm_full_init = static_cast<bool(*)(RuntimeInitArgs *)>(FPlatformProcess::GetDllExport(gp_dll_handle, TEXT("wasm_runtime_full_init")));
 }
 
-void WAMRWrapper::wasm_runtime_init()
+bool WAMRWrapper::wasm_runtime_init()
 {
 	vm_init();
+	return true;
+}
+
+bool WAMRWrapper::wasm_runtime_full_init(RuntimeInitArgs *init_args)
+{
+	vm_full_init(init_args);
+	return true;
 }
