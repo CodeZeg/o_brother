@@ -59,7 +59,5 @@ public class oz_lib : ModuleRules
         PublicIncludePaths.Add("$(PluginDir)/ThirdParty/wamr/Win64/Include");
         PublicSystemLibraryPaths.Add("$(PluginDir)/ThirdParty/wamr/Win64/lib");
         PublicAdditionalLibraries.Add("$(PluginDir)/ThirdParty/wamr/Win64/lib/libiwasm.lib");
-        // 自动拷贝到Binaries目录
-        RuntimeDependencies.Add("$(PluginDir)/Binaries/Win64/libiwasm.dll", "$(PluginDir)/ThirdParty/wamr/Win64/lib/libiwasm.dll");
 	}
 }
