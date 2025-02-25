@@ -13,7 +13,6 @@
 #define _WASM_EXPORT_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include "wasm_lib_export.h"
 
 #ifndef WASM_RUNTIME_API_EXTERN
