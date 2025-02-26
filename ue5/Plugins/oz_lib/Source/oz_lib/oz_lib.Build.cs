@@ -8,6 +8,7 @@ public class oz_lib : ModuleRules
 	public oz_lib(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		bEnableExceptions = true;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -64,5 +65,6 @@ public class oz_lib : ModuleRules
 
         // 添加wasm文件
         RuntimeDependencies.Add("$(PluginDir)/ThirdParty/Win64/testapp.wasm");
+        RuntimeDependencies.Add("$(PluginDir)/ThirdParty/Win64/testapp.aot");
 	}
 }
