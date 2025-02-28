@@ -7,14 +7,23 @@ struct GPMotionState {
 }
 
 table GPRenderCharacterData {
-  id:int;
+  actor_id:int;
+  actor_res_id:int;
   transform:GPTrans2D;
   motion_state:GPMotionState;
 }
 
+table GPRenderEffectData {
+  effect_id: int;
+  effect_res_id: int;
+  transform:GPTrans2D;
+}
+
 table GPRenderData {
-  generation:int;
+  actors_generation:int;            // 代数不同，就表示需要增删actor
   actors:[GPRenderCharacterData];
+  effects_generation:int;           // 代数不同，就表示需要增删effect
+  effects:[GPRenderEffectData];
 }
 
 root_type GPRenderData;

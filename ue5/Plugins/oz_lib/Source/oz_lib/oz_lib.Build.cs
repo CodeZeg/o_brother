@@ -32,6 +32,7 @@ public class oz_lib : ModuleRules
 				"Engine",
 				"CoreUObject",
 				"EnhancedInput",
+				"Niagara",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -40,7 +41,7 @@ public class oz_lib : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"rust_lib"
+				"rust_lib",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

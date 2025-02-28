@@ -7,7 +7,9 @@
 #include "input_data_generated.h"
 #include "RenderDataWrapper.h"
 #include "GameFramework/Pawn.h"
+#include "NiagaraComponent.h"
 #include "GPPawn.generated.h"
+
 
 UCLASS()
 class OZ_LIB_API AGPPawn : public APawn
@@ -34,9 +36,11 @@ private:
 	flatbuffers::Offset<GPInputData> GetLocalInputData(flatbuffers::FlatBufferBuilder &builder) const;
 	void ApplyRenderData(const GPRenderData* render_data);
 	void SpawnActor(const GPRenderCharacterData* character);
+	void PlayEffect(const GPRenderEffectData* EffectData);
 	
 	TObjectPtr<AActor> LocalActor;			// Local player actor
 	TMap<int32, TObjectPtr<AActor>> SpawnedActors; // All spawned actors
+	TMap<int32, TObjectPtr<UNiagaraComponent>> SpawnedEffects; // All spawned actors
 private:
 	UPROPERTY(EditAnywhere, Category = "GPPawn", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> IMC_Local_PLayer;
@@ -47,5 +51,6 @@ private:
 
 private:
 	// 非序列化字段
-	int Render_Generation;
+	int Actor_Render_Generation;
+	int Effect_Render_Generation;
 };

@@ -186,9 +186,10 @@ impl<'a> flatbuffers::Follow<'a> for GPRenderCharacterData<'a> {
 }
 
 impl<'a> GPRenderCharacterData<'a> {
-  pub const VT_ID: flatbuffers::VOffsetT = 4;
-  pub const VT_TRANSFORM: flatbuffers::VOffsetT = 6;
-  pub const VT_MOTION_STATE: flatbuffers::VOffsetT = 8;
+  pub const VT_ACTOR_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_ACTOR_RES_ID: flatbuffers::VOffsetT = 6;
+  pub const VT_TRANSFORM: flatbuffers::VOffsetT = 8;
+  pub const VT_MOTION_STATE: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -202,17 +203,25 @@ impl<'a> GPRenderCharacterData<'a> {
     let mut builder = GPRenderCharacterDataBuilder::new(_fbb);
     if let Some(x) = args.motion_state { builder.add_motion_state(x); }
     if let Some(x) = args.transform { builder.add_transform(x); }
-    builder.add_id(args.id);
+    builder.add_actor_res_id(args.actor_res_id);
+    builder.add_actor_id(args.actor_id);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn id(&self) -> i32 {
+  pub fn actor_id(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(GPRenderCharacterData::VT_ID, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(GPRenderCharacterData::VT_ACTOR_ID, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn actor_res_id(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(GPRenderCharacterData::VT_ACTOR_RES_ID, Some(0)).unwrap()}
   }
   #[inline]
   pub fn transform(&self) -> Option<&'a GPTrans2D> {
@@ -237,7 +246,8 @@ impl flatbuffers::Verifiable for GPRenderCharacterData<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<i32>("id", Self::VT_ID, false)?
+     .visit_field::<i32>("actor_id", Self::VT_ACTOR_ID, false)?
+     .visit_field::<i32>("actor_res_id", Self::VT_ACTOR_RES_ID, false)?
      .visit_field::<GPTrans2D>("transform", Self::VT_TRANSFORM, false)?
      .visit_field::<GPMotionState>("motion_state", Self::VT_MOTION_STATE, false)?
      .finish();
@@ -245,7 +255,8 @@ impl flatbuffers::Verifiable for GPRenderCharacterData<'_> {
   }
 }
 pub struct GPRenderCharacterDataArgs<'a> {
-    pub id: i32,
+    pub actor_id: i32,
+    pub actor_res_id: i32,
     pub transform: Option<&'a GPTrans2D>,
     pub motion_state: Option<&'a GPMotionState>,
 }
@@ -253,7 +264,8 @@ impl<'a> Default for GPRenderCharacterDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     GPRenderCharacterDataArgs {
-      id: 0,
+      actor_id: 0,
+      actor_res_id: 0,
       transform: None,
       motion_state: None,
     }
@@ -266,8 +278,12 @@ pub struct GPRenderCharacterDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> GPRenderCharacterDataBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_id(&mut self, id: i32) {
-    self.fbb_.push_slot::<i32>(GPRenderCharacterData::VT_ID, id, 0);
+  pub fn add_actor_id(&mut self, actor_id: i32) {
+    self.fbb_.push_slot::<i32>(GPRenderCharacterData::VT_ACTOR_ID, actor_id, 0);
+  }
+  #[inline]
+  pub fn add_actor_res_id(&mut self, actor_res_id: i32) {
+    self.fbb_.push_slot::<i32>(GPRenderCharacterData::VT_ACTOR_RES_ID, actor_res_id, 0);
   }
   #[inline]
   pub fn add_transform(&mut self, transform: &GPTrans2D) {
@@ -295,9 +311,141 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> GPRenderCharacterDataBuilder<'a
 impl core::fmt::Debug for GPRenderCharacterData<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("GPRenderCharacterData");
-      ds.field("id", &self.id());
+      ds.field("actor_id", &self.actor_id());
+      ds.field("actor_res_id", &self.actor_res_id());
       ds.field("transform", &self.transform());
       ds.field("motion_state", &self.motion_state());
+      ds.finish()
+  }
+}
+pub enum GPRenderEffectDataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct GPRenderEffectData<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for GPRenderEffectData<'a> {
+  type Inner = GPRenderEffectData<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> GPRenderEffectData<'a> {
+  pub const VT_EFFECT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_EFFECT_RES_ID: flatbuffers::VOffsetT = 6;
+  pub const VT_TRANSFORM: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    GPRenderEffectData { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args GPRenderEffectDataArgs<'args>
+  ) -> flatbuffers::WIPOffset<GPRenderEffectData<'bldr>> {
+    let mut builder = GPRenderEffectDataBuilder::new(_fbb);
+    if let Some(x) = args.transform { builder.add_transform(x); }
+    builder.add_effect_res_id(args.effect_res_id);
+    builder.add_effect_id(args.effect_id);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn effect_id(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(GPRenderEffectData::VT_EFFECT_ID, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn effect_res_id(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(GPRenderEffectData::VT_EFFECT_RES_ID, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn transform(&self) -> Option<&'a GPTrans2D> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<GPTrans2D>(GPRenderEffectData::VT_TRANSFORM, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for GPRenderEffectData<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<i32>("effect_id", Self::VT_EFFECT_ID, false)?
+     .visit_field::<i32>("effect_res_id", Self::VT_EFFECT_RES_ID, false)?
+     .visit_field::<GPTrans2D>("transform", Self::VT_TRANSFORM, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct GPRenderEffectDataArgs<'a> {
+    pub effect_id: i32,
+    pub effect_res_id: i32,
+    pub transform: Option<&'a GPTrans2D>,
+}
+impl<'a> Default for GPRenderEffectDataArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    GPRenderEffectDataArgs {
+      effect_id: 0,
+      effect_res_id: 0,
+      transform: None,
+    }
+  }
+}
+
+pub struct GPRenderEffectDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> GPRenderEffectDataBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_effect_id(&mut self, effect_id: i32) {
+    self.fbb_.push_slot::<i32>(GPRenderEffectData::VT_EFFECT_ID, effect_id, 0);
+  }
+  #[inline]
+  pub fn add_effect_res_id(&mut self, effect_res_id: i32) {
+    self.fbb_.push_slot::<i32>(GPRenderEffectData::VT_EFFECT_RES_ID, effect_res_id, 0);
+  }
+  #[inline]
+  pub fn add_transform(&mut self, transform: &GPTrans2D) {
+    self.fbb_.push_slot_always::<&GPTrans2D>(GPRenderEffectData::VT_TRANSFORM, transform);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> GPRenderEffectDataBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    GPRenderEffectDataBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<GPRenderEffectData<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for GPRenderEffectData<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("GPRenderEffectData");
+      ds.field("effect_id", &self.effect_id());
+      ds.field("effect_res_id", &self.effect_res_id());
+      ds.field("transform", &self.transform());
       ds.finish()
   }
 }
@@ -317,8 +465,10 @@ impl<'a> flatbuffers::Follow<'a> for GPRenderData<'a> {
 }
 
 impl<'a> GPRenderData<'a> {
-  pub const VT_GENERATION: flatbuffers::VOffsetT = 4;
+  pub const VT_ACTORS_GENERATION: flatbuffers::VOffsetT = 4;
   pub const VT_ACTORS: flatbuffers::VOffsetT = 6;
+  pub const VT_EFFECTS_GENERATION: flatbuffers::VOffsetT = 8;
+  pub const VT_EFFECTS: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -330,18 +480,20 @@ impl<'a> GPRenderData<'a> {
     args: &'args GPRenderDataArgs<'args>
   ) -> flatbuffers::WIPOffset<GPRenderData<'bldr>> {
     let mut builder = GPRenderDataBuilder::new(_fbb);
+    if let Some(x) = args.effects { builder.add_effects(x); }
+    builder.add_effects_generation(args.effects_generation);
     if let Some(x) = args.actors { builder.add_actors(x); }
-    builder.add_generation(args.generation);
+    builder.add_actors_generation(args.actors_generation);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn generation(&self) -> i32 {
+  pub fn actors_generation(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(GPRenderData::VT_GENERATION, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(GPRenderData::VT_ACTORS_GENERATION, Some(0)).unwrap()}
   }
   #[inline]
   pub fn actors(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData<'a>>>> {
@@ -349,6 +501,20 @@ impl<'a> GPRenderData<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData>>>>(GPRenderData::VT_ACTORS, None)}
+  }
+  #[inline]
+  pub fn effects_generation(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(GPRenderData::VT_EFFECTS_GENERATION, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn effects(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderEffectData<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderEffectData>>>>(GPRenderData::VT_EFFECTS, None)}
   }
 }
 
@@ -359,22 +525,28 @@ impl flatbuffers::Verifiable for GPRenderData<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<i32>("generation", Self::VT_GENERATION, false)?
+     .visit_field::<i32>("actors_generation", Self::VT_ACTORS_GENERATION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<GPRenderCharacterData>>>>("actors", Self::VT_ACTORS, false)?
+     .visit_field::<i32>("effects_generation", Self::VT_EFFECTS_GENERATION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<GPRenderEffectData>>>>("effects", Self::VT_EFFECTS, false)?
      .finish();
     Ok(())
   }
 }
 pub struct GPRenderDataArgs<'a> {
-    pub generation: i32,
+    pub actors_generation: i32,
     pub actors: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderCharacterData<'a>>>>>,
+    pub effects_generation: i32,
+    pub effects: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<GPRenderEffectData<'a>>>>>,
 }
 impl<'a> Default for GPRenderDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     GPRenderDataArgs {
-      generation: 0,
+      actors_generation: 0,
       actors: None,
+      effects_generation: 0,
+      effects: None,
     }
   }
 }
@@ -385,12 +557,20 @@ pub struct GPRenderDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> GPRenderDataBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_generation(&mut self, generation: i32) {
-    self.fbb_.push_slot::<i32>(GPRenderData::VT_GENERATION, generation, 0);
+  pub fn add_actors_generation(&mut self, actors_generation: i32) {
+    self.fbb_.push_slot::<i32>(GPRenderData::VT_ACTORS_GENERATION, actors_generation, 0);
   }
   #[inline]
   pub fn add_actors(&mut self, actors: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<GPRenderCharacterData<'b >>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(GPRenderData::VT_ACTORS, actors);
+  }
+  #[inline]
+  pub fn add_effects_generation(&mut self, effects_generation: i32) {
+    self.fbb_.push_slot::<i32>(GPRenderData::VT_EFFECTS_GENERATION, effects_generation, 0);
+  }
+  #[inline]
+  pub fn add_effects(&mut self, effects: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<GPRenderEffectData<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(GPRenderData::VT_EFFECTS, effects);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> GPRenderDataBuilder<'a, 'b, A> {
@@ -410,8 +590,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> GPRenderDataBuilder<'a, 'b, A> 
 impl core::fmt::Debug for GPRenderData<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("GPRenderData");
-      ds.field("generation", &self.generation());
+      ds.field("actors_generation", &self.actors_generation());
       ds.field("actors", &self.actors());
+      ds.field("effects_generation", &self.effects_generation());
+      ds.field("effects", &self.effects());
       ds.finish()
   }
 }

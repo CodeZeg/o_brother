@@ -20,6 +20,9 @@ struct GPMotionState;
 struct GPRenderCharacterData;
 struct GPRenderCharacterDataBuilder;
 
+struct GPRenderEffectData;
+struct GPRenderEffectDataBuilder;
+
 struct GPRenderData;
 struct GPRenderDataBuilder;
 
@@ -55,12 +58,16 @@ FLATBUFFERS_STRUCT_END(GPMotionState, 12);
 struct GPRenderCharacterData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef GPRenderCharacterDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_TRANSFORM = 6,
-    VT_MOTION_STATE = 8
+    VT_ACTOR_ID = 4,
+    VT_ACTOR_RES_ID = 6,
+    VT_TRANSFORM = 8,
+    VT_MOTION_STATE = 10
   };
-  int32_t id() const {
-    return GetField<int32_t>(VT_ID, 0);
+  int32_t actor_id() const {
+    return GetField<int32_t>(VT_ACTOR_ID, 0);
+  }
+  int32_t actor_res_id() const {
+    return GetField<int32_t>(VT_ACTOR_RES_ID, 0);
   }
   const GPTrans2D *transform() const {
     return GetStruct<const GPTrans2D *>(VT_TRANSFORM);
@@ -70,7 +77,8 @@ struct GPRenderCharacterData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_ID, 4) &&
+           VerifyField<int32_t>(verifier, VT_ACTOR_ID, 4) &&
+           VerifyField<int32_t>(verifier, VT_ACTOR_RES_ID, 4) &&
            VerifyField<GPTrans2D>(verifier, VT_TRANSFORM, 4) &&
            VerifyField<GPMotionState>(verifier, VT_MOTION_STATE, 4) &&
            verifier.EndTable();
@@ -81,8 +89,11 @@ struct GPRenderCharacterDataBuilder {
   typedef GPRenderCharacterData Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_id(int32_t id) {
-    fbb_.AddElement<int32_t>(GPRenderCharacterData::VT_ID, id, 0);
+  void add_actor_id(int32_t actor_id) {
+    fbb_.AddElement<int32_t>(GPRenderCharacterData::VT_ACTOR_ID, actor_id, 0);
+  }
+  void add_actor_res_id(int32_t actor_res_id) {
+    fbb_.AddElement<int32_t>(GPRenderCharacterData::VT_ACTOR_RES_ID, actor_res_id, 0);
   }
   void add_transform(const GPTrans2D *transform) {
     fbb_.AddStruct(GPRenderCharacterData::VT_TRANSFORM, transform);
@@ -103,34 +114,109 @@ struct GPRenderCharacterDataBuilder {
 
 inline ::flatbuffers::Offset<GPRenderCharacterData> CreateGPRenderCharacterData(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    int32_t id = 0,
+    int32_t actor_id = 0,
+    int32_t actor_res_id = 0,
     const GPTrans2D *transform = nullptr,
     const GPMotionState *motion_state = nullptr) {
   GPRenderCharacterDataBuilder builder_(_fbb);
   builder_.add_motion_state(motion_state);
   builder_.add_transform(transform);
-  builder_.add_id(id);
+  builder_.add_actor_res_id(actor_res_id);
+  builder_.add_actor_id(actor_id);
+  return builder_.Finish();
+}
+
+struct GPRenderEffectData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef GPRenderEffectDataBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_EFFECT_ID = 4,
+    VT_EFFECT_RES_ID = 6,
+    VT_TRANSFORM = 8
+  };
+  int32_t effect_id() const {
+    return GetField<int32_t>(VT_EFFECT_ID, 0);
+  }
+  int32_t effect_res_id() const {
+    return GetField<int32_t>(VT_EFFECT_RES_ID, 0);
+  }
+  const GPTrans2D *transform() const {
+    return GetStruct<const GPTrans2D *>(VT_TRANSFORM);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_EFFECT_ID, 4) &&
+           VerifyField<int32_t>(verifier, VT_EFFECT_RES_ID, 4) &&
+           VerifyField<GPTrans2D>(verifier, VT_TRANSFORM, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct GPRenderEffectDataBuilder {
+  typedef GPRenderEffectData Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_effect_id(int32_t effect_id) {
+    fbb_.AddElement<int32_t>(GPRenderEffectData::VT_EFFECT_ID, effect_id, 0);
+  }
+  void add_effect_res_id(int32_t effect_res_id) {
+    fbb_.AddElement<int32_t>(GPRenderEffectData::VT_EFFECT_RES_ID, effect_res_id, 0);
+  }
+  void add_transform(const GPTrans2D *transform) {
+    fbb_.AddStruct(GPRenderEffectData::VT_TRANSFORM, transform);
+  }
+  explicit GPRenderEffectDataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<GPRenderEffectData> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<GPRenderEffectData>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<GPRenderEffectData> CreateGPRenderEffectData(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t effect_id = 0,
+    int32_t effect_res_id = 0,
+    const GPTrans2D *transform = nullptr) {
+  GPRenderEffectDataBuilder builder_(_fbb);
+  builder_.add_transform(transform);
+  builder_.add_effect_res_id(effect_res_id);
+  builder_.add_effect_id(effect_id);
   return builder_.Finish();
 }
 
 struct GPRenderData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef GPRenderDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_GENERATION = 4,
-    VT_ACTORS = 6
+    VT_ACTORS_GENERATION = 4,
+    VT_ACTORS = 6,
+    VT_EFFECTS_GENERATION = 8,
+    VT_EFFECTS = 10
   };
-  int32_t generation() const {
-    return GetField<int32_t>(VT_GENERATION, 0);
+  int32_t actors_generation() const {
+    return GetField<int32_t>(VT_ACTORS_GENERATION, 0);
   }
   const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>> *actors() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>> *>(VT_ACTORS);
   }
+  int32_t effects_generation() const {
+    return GetField<int32_t>(VT_EFFECTS_GENERATION, 0);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderEffectData>> *effects() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<GPRenderEffectData>> *>(VT_EFFECTS);
+  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_GENERATION, 4) &&
+           VerifyField<int32_t>(verifier, VT_ACTORS_GENERATION, 4) &&
            VerifyOffset(verifier, VT_ACTORS) &&
            verifier.VerifyVector(actors()) &&
            verifier.VerifyVectorOfTables(actors()) &&
+           VerifyField<int32_t>(verifier, VT_EFFECTS_GENERATION, 4) &&
+           VerifyOffset(verifier, VT_EFFECTS) &&
+           verifier.VerifyVector(effects()) &&
+           verifier.VerifyVectorOfTables(effects()) &&
            verifier.EndTable();
   }
 };
@@ -139,11 +225,17 @@ struct GPRenderDataBuilder {
   typedef GPRenderData Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_generation(int32_t generation) {
-    fbb_.AddElement<int32_t>(GPRenderData::VT_GENERATION, generation, 0);
+  void add_actors_generation(int32_t actors_generation) {
+    fbb_.AddElement<int32_t>(GPRenderData::VT_ACTORS_GENERATION, actors_generation, 0);
   }
   void add_actors(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>>> actors) {
     fbb_.AddOffset(GPRenderData::VT_ACTORS, actors);
+  }
+  void add_effects_generation(int32_t effects_generation) {
+    fbb_.AddElement<int32_t>(GPRenderData::VT_EFFECTS_GENERATION, effects_generation, 0);
+  }
+  void add_effects(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderEffectData>>> effects) {
+    fbb_.AddOffset(GPRenderData::VT_EFFECTS, effects);
   }
   explicit GPRenderDataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -158,23 +250,32 @@ struct GPRenderDataBuilder {
 
 inline ::flatbuffers::Offset<GPRenderData> CreateGPRenderData(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    int32_t generation = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>>> actors = 0) {
+    int32_t actors_generation = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderCharacterData>>> actors = 0,
+    int32_t effects_generation = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<GPRenderEffectData>>> effects = 0) {
   GPRenderDataBuilder builder_(_fbb);
+  builder_.add_effects(effects);
+  builder_.add_effects_generation(effects_generation);
   builder_.add_actors(actors);
-  builder_.add_generation(generation);
+  builder_.add_actors_generation(actors_generation);
   return builder_.Finish();
 }
 
 inline ::flatbuffers::Offset<GPRenderData> CreateGPRenderDataDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    int32_t generation = 0,
-    const std::vector<::flatbuffers::Offset<GPRenderCharacterData>> *actors = nullptr) {
+    int32_t actors_generation = 0,
+    const std::vector<::flatbuffers::Offset<GPRenderCharacterData>> *actors = nullptr,
+    int32_t effects_generation = 0,
+    const std::vector<::flatbuffers::Offset<GPRenderEffectData>> *effects = nullptr) {
   auto actors__ = actors ? _fbb.CreateVector<::flatbuffers::Offset<GPRenderCharacterData>>(*actors) : 0;
+  auto effects__ = effects ? _fbb.CreateVector<::flatbuffers::Offset<GPRenderEffectData>>(*effects) : 0;
   return CreateGPRenderData(
       _fbb,
-      generation,
-      actors__);
+      actors_generation,
+      actors__,
+      effects_generation,
+      effects__);
 }
 
 inline const GPRenderData *GetGPRenderData(const void *buf) {
