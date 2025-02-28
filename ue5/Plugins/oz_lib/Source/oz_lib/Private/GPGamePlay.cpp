@@ -1,5 +1,11 @@
 #include "GPGamePlay.h"
 #include "utils.h"
+#include "Interfaces/IPluginManager.h"
+#include "CoreMinimal.h"
+#include "Engine/GameInstance.h"
+#include "Logging/LogMacros.h"
+
+DEFINE_LOG_CATEGORY(LogGP);
 
 // 类外初始化单例（程序启动时执行）
 GPGamePlayMgrSingleton GPGamePlayMgrSingleton::instance;
@@ -139,6 +145,25 @@ uint8* GPGamePlayModule::Call_Update(const flatbuffers::FlatBufferBuilder& Input
 	return output_data;
 }
 
+static void log_wrapper(wasm_exec_env_t exec_env, const char* msg, uint32 len)
+{
+	// 将消息转换为字符串并使用 Unreal 的日志系统
+	auto logMessage = FString(msg);
+	UE_LOG(LogGP, Display, TEXT("%d, %s"), len, *logMessage);
+}
+
+static void error_wrapper(wasm_exec_env_t exec_env, const char* msg, uint32 len)
+{
+	// 将消息转换为字符串并使用 Unreal 的日志系统
+	auto logMessage = FString(msg);
+	UE_LOG(LogGP, Error, TEXT("%d, %s"), len, *logMessage);
+}
+
+
+static NativeSymbol native_symbols[] = {
+    { "log_wrapper", log_wrapper, "($i)", NULL },
+    { "error_wrapper", error_wrapper, "($i)", NULL },
+};
 
 void GPGamePlayMgrSingleton::Init()
 {	
@@ -147,6 +172,10 @@ void GPGamePlayMgrSingleton::Init()
  	init_args.mem_alloc_type = Alloc_With_Pool;
  	init_args.mem_alloc_option.pool.heap_buf = global_heap_buf;
  	init_args.mem_alloc_option.pool.heap_size = sizeof(global_heap_buf);
+
+ 	init_args.n_native_symbols = sizeof(native_symbols) / sizeof(NativeSymbol);
+    init_args.native_module_name = "env";
+    init_args.native_symbols = native_symbols;
  	if (!wasm_runtime_full_init(&init_args)) {
  		UE_LOG(LogTemp, Error, TEXT("init wasm runtime failed"))
  		return;

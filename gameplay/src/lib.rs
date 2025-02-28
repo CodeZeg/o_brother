@@ -75,7 +75,7 @@ impl LcgRng {
 
 #[no_mangle]
 pub extern "C" fn start() {
-    //engine::log("begin start");
+    engine::log("gameplay world begin start");
     let mut world = LogicData{
         current_time: 0.0,
         actor_spawner: ActorSpawnerData {
@@ -159,7 +159,7 @@ fn update_spawner(data: &mut LogicData) {
     data.actor_spawner.next_spawn_time = data.current_time + 5.0;
     let mut rng = LcgRng::new(data.current_time as u64);
     let spawn_num = rng.next_u32() % 5 + 2;
-    engine::log(&format!("spawn_num: {}", spawn_num));
+    // engine::log(&format!("spawn_num: {}", spawn_num));
     for i in 0..spawn_num {
          data.actor_spawner.next_monster_id += 1;
         let mut monster = LogicCharacterData {
@@ -267,7 +267,7 @@ fn update_death(monsters: &mut HashMap<i32, LogicCharacterData>) {
 
     for key in keys_to_remove {
         monsters.remove(&key);
-        engine::log(&format!("monster {} died", key));
+        // engine::log(&format!("monster {} died", key));
     }
 }
 
@@ -284,7 +284,7 @@ fn update_effects(effects: &mut HashMap<i32, LogicEffectData>) {
 
     for key in keys_to_remove {
         effects.remove(&key);
-        engine::log(&format!("effect {} died", key));
+        // engine::log(&format!("effect {} died", key));
     }
 }
 

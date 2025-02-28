@@ -8,8 +8,6 @@
 
 #include "GPGamePlay.h"
 
-DEFINE_LOG_CATEGORY(LogGP);
-
 FString getWasmFilePath(FString fileName)
 {
 	// 获取插件基目录（如：/Project/Plugins/YourPlugin/）

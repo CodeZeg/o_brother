@@ -7,9 +7,6 @@
 #include "RenderDataWrapper.h"
 #include "render_data_generated.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogGP, Log, All);
-
-
 /**
  * 
  */
