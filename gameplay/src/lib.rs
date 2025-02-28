@@ -31,6 +31,7 @@ use core::mem;
 use core::mem::ManuallyDrop;
 use core::ops::Sub;
 use core::ptr::slice_from_raw_parts;
+use core::slice::{from_raw_parts, from_raw_parts_mut};
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
@@ -74,7 +75,7 @@ impl LcgRng {
 
 #[no_mangle]
 pub extern "C" fn start() {
-    engine::log("begin start");
+    // engine::log("begin start");
 
     let mut rng = LcgRng::new(42);
 
@@ -106,7 +107,7 @@ pub extern "C" fn start() {
     };
 
     unsafe { WORLD = Some(world); }
-    engine::log("after start")
+    // engine::log("after start")
 }
 
 fn update_player_move_controller(data: &mut MoveController, input: &GPInputPlayerData) {
@@ -151,14 +152,26 @@ fn update_world(data: &mut LogicData, input: &GPInputData) {
 }
 
 #[no_mangle]
-pub extern "C" fn update(input_buffer: *const u8, input_len: u32) -> *const u8 {
+pub extern "C" fn update(input_buffer: *const u8, input_len: u32, output_buffer: *mut u8, output_len: *mut u32) {
     let mut world = world();
     let input = unsafe {
         let slice = slice_from_raw_parts(input_buffer, input_len as usize);
         root_as_gpinput_data_unchecked(&*slice)
     };
     update_world(&mut world, &input);
-    get_render_world_new(&world)
+    let (res, res_len) = get_render_world_new(&world);
+    unsafe {
+        *output_len = res_len as u32;
+    }
+    let mut res_slice = unsafe {
+        let slice = from_raw_parts(res, res_len as usize);
+        slice
+    };
+    let mut output_slice: &mut [u8] = unsafe {
+        let slice = from_raw_parts_mut(output_buffer, output_len as usize);
+        slice
+    };
+    output_slice[..res_len].copy_from_slice(res_slice);
 }
 
 fn get_render_character_new(
@@ -174,7 +187,7 @@ fn get_render_character_new(
     (data.id, trans, motion_state)
 }
 
-fn get_render_world_new(data: &LogicData) -> *const u8 {
+fn get_render_world_new(data: &LogicData) -> (*mut u8, usize) {
     let mut builder = FlatBufferBuilder::new();
     let mut actors = Vec::new();
     let (ch0_id, ch0_trans, ch0_motion_state) = get_render_character_new(&data.character0);
@@ -206,9 +219,11 @@ fn get_render_world_new(data: &LogicData) -> *const u8 {
 
     builder.finish(render_data, None);
     let buf = builder.finished_data();
-    unsafe {
+    let res = unsafe {
         RENDER_CACHE_DATA.clear();
         RENDER_CACHE_DATA.extend_from_slice(buf);
-        RENDER_CACHE_DATA.as_ptr()
-    }
+        let res = RENDER_CACHE_DATA.as_ptr().cast_mut();
+        (res, RENDER_CACHE_DATA.len())
+    };
+    res
 }

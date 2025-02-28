@@ -1,24 +1,47 @@
-[tasks.build_win64]
-command = "cargo"
-args = ["build", "--release"]
+# ================================= env declaration ================================= #
+[env]
+TARGET = {value = "x86_64-unknown-linux-gnu"}
+RELEASE_PLATFORM = "pc"
 
-[tasks.copy_dll]
-command = "cp"
-args = ["target/release/gameplay.dll", "../ue5/Plugins/oz_lib/ThirdParty/Win64/gameplay.dll"]
+[env.pc]
+TARGET = "wasm32-unknown-unknown"
+RELEASE_PLATFORM = "pc"
 
-[tasks.ue5]
-dependencies = ["build_win64", "copy_dll"]
+[env.mobile]
+TARGET = "wasm32v1-none"
+RELEASE_PLATFORM = "mobile"
+
+[env.windows]
+TARGET = "wasm32-unknown-unknown"
+RELEASE_PLATFORM = "pc"
+WAMRC_CMD = "wamrc.exe"
+
+[env.linux]
+TARGET = "wasm32-unknown-unknown"
+RELEASE_PLATFORM = "pc"
+WAMRC_CMD = "wamrc"
+
+# =================================================================================== #
+
+# ================================= task declaration ================================ #
 
 [tasks.build_wasm]
 command = "cargo"
-args = ["build", "--target", "wasm32v1-none", "--release"]
+args = ["build", "--target", "${TARGET}", "--release"]
 
-[tasks.copy_wasm]
-command = "cp"
-args = ["target/wasm32v1-none/release/gameplay.wasm", "../minigame/wasm/gameplay.wasm"]
+[tasks.build_lib]
+command = "cargo"
+args = ["build", "--release"]
 
-[tasks.minigame]
-dependencies = ["build_wasm", "copy_wasm"]
+[tasks.build_aot]
+command = "${WAMRC_CMD}"
+args = ["--target=x86_64", "--size-level=1", "-o", "target/${TARGET}/release/gameplay.aot", "target/${TARGET}/release/gameplay.wasm"]
+
+[tasks.cp_wasm]
+script = "mkdir -p target/${RELEASE_PLATFORM}/release && cp target/${TARGET}/release/gameplay.wasm target/${RELEASE_PLATFORM}/release"
+
+[tasks.cp_aot]
+script = "mkdir -p target/${RELEASE_PLATFORM}/release && cp target/${TARGET}/release/gameplay.aot target/${RELEASE_PLATFORM}/release"
 
 [tasks.schema_rust]
 command = "flatc"
@@ -28,5 +51,26 @@ args = ["--rust", "-o", "src/schema", "schema/math.fbs", "schema/render_data.fbs
 command = "flatc"
 args = ["--cpp", "-o", "../ue5/Plugins/oz_lib/Source/rust_lib/Public", "schema/math.fbs", "schema/render_data.fbs", "schema/input_data.fbs"]
 
+# =================================================================================== #
+
+# ============================== make task declaration ============================== #
+
+# cargo make schema
 [tasks.schema]
 dependencies = ["schema_rust", "schema_cpp"]
+
+# cargo make --profile pc wasm
+# cargo make --profile mobile wasm
+[tasks.wasm]
+dependencies = ["build_wasm", "cp_wasm"]
+
+# cargo make --profile windows aot
+# cargo make --profile linux aot
+[tasks.aot]
+dependencies = ["build_wasm", "build_aot", "cp_wasm", "cp_aot"]
+
+# cargo make lib
+[tasks.lib]
+dependencies = ["build_lib"]
+
+# =================================================================================== #
