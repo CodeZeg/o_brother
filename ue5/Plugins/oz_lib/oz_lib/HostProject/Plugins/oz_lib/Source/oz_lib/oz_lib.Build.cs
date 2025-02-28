@@ -8,7 +8,6 @@ public class oz_lib : ModuleRules
 	public oz_lib(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		bEnableExceptions = true;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -32,7 +31,6 @@ public class oz_lib : ModuleRules
 				"Engine",
 				"CoreUObject",
 				"EnhancedInput",
-				"Niagara",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -41,7 +39,7 @@ public class oz_lib : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"rust_lib",
+				"rust_lib"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -61,11 +59,5 @@ public class oz_lib : ModuleRules
         PublicIncludePaths.Add("$(PluginDir)/ThirdParty/wamr/Win64/Include");
         PublicSystemLibraryPaths.Add("$(PluginDir)/ThirdParty/wamr/Win64/lib");
         PublicAdditionalLibraries.Add("$(PluginDir)/ThirdParty/wamr/Win64/lib/libiwasm.lib");
-        // 自动拷贝到Binaries目录
-        RuntimeDependencies.Add("$(PluginDir)/Binaries/Win64/libiwasm.dll", "$(PluginDir)/ThirdParty/wamr/Win64/lib/libiwasm.dll");
-
-        // 添加wasm文件
-        RuntimeDependencies.Add("$(PluginDir)/ThirdParty/Win64/testapp.wasm");
-        RuntimeDependencies.Add("$(PluginDir)/ThirdParty/Win64/testapp.aot");
 	}
 }

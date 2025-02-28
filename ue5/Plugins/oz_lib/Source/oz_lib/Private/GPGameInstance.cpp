@@ -2,14 +2,17 @@
 
 
 #include "GPGameInstance.h"
+#include "Interfaces/IPluginManager.h"
 
 DEFINE_LOG_CATEGORY(LogGamePlay);
+
 
 void UGPGameInstance::Init()
 {
 	Super::Init();
 	UE_LOG(LogGamePlay, Log, TEXT("GPGameInstance::Init"));
 }
+
 void UGPGameInstance::Shutdown()
 {
 	Super::Shutdown();
@@ -20,3 +23,4 @@ void UGPGameInstance::StartGameInstance()
 	Super::StartGameInstance();
 	UE_LOG(LogGamePlay, Log, TEXT("GPGameInstance::StartGameInstance"));
 }
+
